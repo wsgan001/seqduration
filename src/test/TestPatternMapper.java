@@ -31,8 +31,8 @@ public class TestPatternMapper {
 	
 	public static void main(String[] args) throws IOException,
 			ClassNotFoundException {
-//		run();
-		getMapping();
+		run();
+//		getMapping();
 	}
 
 }

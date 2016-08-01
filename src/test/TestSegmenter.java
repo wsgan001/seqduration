@@ -82,7 +82,7 @@ public class TestSegmenter {
 	public static void main(String[] args) throws IOException,
 			ClassNotFoundException {
 		TestSegmenter ts = new TestSegmenter();
-//		 ts.segment();
-		ts.testSeq();
+		 ts.segment();
+//		ts.testSeq();
 	}
 }
