@@ -2,6 +2,8 @@ package pattern;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -10,7 +12,11 @@ import java.util.Map;
 import java.util.Scanner;
 import java.util.Set;
 
+import parameters.FileAddresses;
+
 public class SequentialMiner {
+
+	final protected static String CANDIDATE = ".tmp";
 
 	protected static String SEPERATOR = " ";
 
@@ -26,7 +32,13 @@ public class SequentialMiner {
 	 */
 	private List<String> database;
 
-	public List<Map<String, Double>> candidates;
+	private String my_db_file;
+
+	public Map<String, Double> current_candidates;
+
+	public Set<String> all_candidates;
+
+	public int my_top_k;
 
 	/**
 	 * Map<a string consisting of ids of the previous-k situations, Map<id for
@@ -39,11 +51,14 @@ public class SequentialMiner {
 	// */
 	// private Map<String, Integer> occurrences;
 
-	public SequentialMiner(final String the_db_file,
-			final double the_support_count) throws FileNotFoundException {
+	public SequentialMiner(final String the_db_file, final double the_support_count, final int the_top_k)
+			throws FileNotFoundException {
+		my_db_file = the_db_file;
 		getDB(the_db_file);
 		support_count = the_support_count * database.size();
-		candidates = new ArrayList<Map<String, Double>>();
+		current_candidates = new HashMap<String, Double>();
+		all_candidates = new HashSet<String>();
+		my_top_k = the_top_k;
 	}
 
 	private void getDB(final String the_db_file) throws FileNotFoundException {
@@ -63,7 +78,15 @@ public class SequentialMiner {
 		}
 	}
 
-	private Map<String, Double> oneItemCandidate() {
+	private void writeCandidates(int k) throws IOException {
+		FileWriter fw = new FileWriter(my_db_file + "." + k + FileAddresses.PATTERN_AFFIX);
+		MapUtil.orderAndWrite(current_candidates, fw, my_top_k);
+		fw.close();
+		all_candidates.addAll(current_candidates.keySet());
+		current_candidates = new HashMap<String, Double>();
+	}
+
+	private void oneItemCandidate() throws IOException {
 		Map<String, Double> result = new HashMap<String, Double>();
 		for (String transaction : database) {
 			String[] items = transaction.split(SEPERATOR);
@@ -76,55 +99,74 @@ public class SequentialMiner {
 				result.put(item, count);
 			}
 		}
-		Map<String, Double> cands = new HashMap<String, Double>();
+		// Map<String, Double> cands = new HashMap<String, Double>();
 		for (String cand : result.keySet()) {
-			if (cand != null && !cand.isEmpty()
-					&& result.get(cand) >= support_count) {
-				cands.put(cand, result.get(cand));
+			if (cand != null && !cand.isEmpty() && result.get(cand) >= support_count) {
+				current_candidates.put(cand, result.get(cand));
 				// System.out.println(cand+" "+result.get(cand));
 			}
 		}
-		candidates.add(0, cands);
-		return result;
+		// candidates.add(0, cands);
+		writeCandidates(0);
 	}
 
-	public void buildInternalModel() {
+	public void buildInternalModel() throws IOException {
 		oneItemCandidate();
 		int k = 1;
-		Map<String, Double> round_k = null;
+		boolean stop = false;
 		do {
-			System.out.println("pattern round k: "+k);
-			round_k = new HashMap<String, Double>();
+			System.out.println("pattern round k: " + k);
 			// generate the kth round pattern candidates
-			Set<String> patterns = generate(k);
-			for (String p : patterns) {
-				double sc = updateSupportCount(p);
-				if (sc > support_count) {
-					round_k.put(p, sc);
+			Map<String, Double> first_count = generate(k);
+			count(first_count);
+			for (String p : first_count.keySet()) {
+				if (first_count.get(p) >= support_count) {
+					current_candidates.put(p, first_count.get(p));
 				}
 			}
-			if (!round_k.isEmpty()) {
-				candidates.add(k, round_k);
+			if (!current_candidates.isEmpty()) {
+				writeCandidates(k);
+			} else {
+				stop = true;
 			}
 			k++;
-		} while (!round_k.isEmpty());
+			Runtime.getRuntime().freeMemory();
+		} while (!stop);
 	}
 
 	/**
-	 * update support count if a pattern is supported by the sequences
+	 * go through the database one by one to count each pattern. One pass
 	 * 
-	 * @param a_candidate
+	 * @param new_patterns
 	 * @return
 	 */
-	private double updateSupportCount(String a_candidate) {
-		double count = 0;
+	private void count(Map<String, Double> new_patterns) {
+		// if (new_patterns.size() > 10000) {
+		// countByPattern(new_patterns, result);
+		// } else {
 		for (String one_transaction : database) {
-			// String converted = Utility.form(one_transaction);
-			if (contains(one_transaction, a_candidate)) {
-				count = count + 1;
+			for (String np : new_patterns.keySet()) {
+				if (contains(one_transaction, np)) {
+					new_patterns.put(np, new_patterns.get(np) + 1);
+				}
 			}
 		}
-		return count;
+		// }
+	}
+
+	private void countByPattern(Set<String> new_patterns, Map<String, Double> result) {
+		for (String np : new_patterns) {
+			for (String one_transaction : database) {
+				if (contains(one_transaction, np)) {
+					if (result.containsKey(np)) {
+						result.put(np, result.get(np) + 1);
+					} else {
+						result.put(np, 1.0);
+					}
+					break;
+				}
+			}
+		}
 	}
 
 	private boolean contains(final String biggerS, final String smallS) {
@@ -138,9 +180,9 @@ public class SequentialMiner {
 				return true;
 			}
 		}
-//		if (sindex == ss.length) {
-//			return true;
-//		}
+		// if (sindex == ss.length) {
+		// return true;
+		// }
 		return false;
 	}
 
@@ -150,31 +192,23 @@ public class SequentialMiner {
 	 * @param k
 	 * @return
 	 */
-	private Set<String> generate(int k) {
-		int k2 = k - 1;
-		Set<String> candidate_k_1 = new HashSet<String>();
-		while (k2 >= 0) {
-			for (String s : candidates.get(k2).keySet()) {
-				candidate_k_1.add(s);
-			}
-			k2--;
-		}
-
+	private Map<String, Double> generate(int k) {
 		// System.out.println("k=" + k + " in generate: " +
 		// candidate_k_1.size());
-		Set<String> patterns = new HashSet<String>();
-		for (String p : candidate_k_1) {
-			for (String pn : candidate_k_1) {
+		Map<String, Double> npatterns = new HashMap<String, Double>();
+		current_candidates = new HashMap<String, Double>();
+		for (String p : all_candidates) {
+			for (String pn : all_candidates) {
 				String new_pattern = p + SEPERATOR + pn;
 				// System.out.println(new_pattern + " "
 				// + new_pattern.split(SEPERATOR).length);
-				if (!candidate_k_1.contains(new_pattern)
+				if (!all_candidates.contains(new_pattern) && !npatterns.containsKey(new_pattern)
 						&& new_pattern.split(SEPERATOR).length == k + 1) {
-					patterns.add(new_pattern);
+					npatterns.put(new_pattern, 0.0);
 				}
 			}
 		}
-		 System.out.println(k + "-length patterns: " + patterns.size());
-		return patterns;
+		System.out.println(k + "-length patterns: " + npatterns.size());
+		return npatterns;
 	}
 }

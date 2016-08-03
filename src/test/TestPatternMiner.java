@@ -11,7 +11,8 @@ import pattern.SequentialMiner;
 public class TestPatternMiner {
 
 	final private static int ACT_SIZE = 25;
-	final private static double support_ratio = 0.2;
+	final private static double support_ratio = 0.5;
+	final private static int topK = 20;
 
 	public static void mine() throws IOException {
 		for (int i = 0; i < ACT_SIZE; i++) {
@@ -19,22 +20,22 @@ public class TestPatternMiner {
 //			PatternMiner pm = new PatternMiner(FileAddresses.PATTERN + i,
 //					support_ratio);
 //			pm.mine();
-			SequentialMiner sm = new SequentialMiner(FileAddresses.PATTERN+i,support_ratio);
+			SequentialMiner sm = new SequentialMiner(FileAddresses.DB+i,support_ratio,topK);
 			sm.buildInternalModel();
-			{
-				FileOutputStream fos = new FileOutputStream(FileAddresses.PATTERN+i+FileAddresses.PATTERN_AFFIX);
-				ObjectOutputStream oos = new ObjectOutputStream(fos);
-				oos.writeObject(sm.candidates);
-				oos.close();
-				fos.close();
-			}
+//			{
+//				FileOutputStream fos = new FileOutputStream(FileAddresses.PATTERN+i+FileAddresses.PATTERN_AFFIX);
+//				ObjectOutputStream oos = new ObjectOutputStream(fos);
+//				oos.writeObject(sm.candidates);
+//				oos.close();
+//				fos.close();
+//			}
 		}
 	}
 
 	public static void selectP() throws IOException {
 		for (int i = 0; i < ACT_SIZE; i++) {
 			System.out.println(i);
-			PatternMiner pm = new PatternMiner(FileAddresses.PATTERN + i,
+			PatternMiner pm = new PatternMiner(FileAddresses.DB + i,
 					support_ratio);
 			pm.selectPattern();
 		}

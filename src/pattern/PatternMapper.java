@@ -44,7 +44,7 @@ public class PatternMapper {
 	private FileWriter[] initialiseFileWriter() throws IOException {
 		FileWriter[] fw = new FileWriter[NUM_OF_ACT];
 		for (int i = 0; i < NUM_OF_ACT; i++) {
-			fw[i] = new FileWriter(FileAddresses.PATTERN + i);
+			fw[i] = new FileWriter(FileAddresses.DB + i);
 		}
 		return fw;
 	}

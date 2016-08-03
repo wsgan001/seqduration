@@ -11,7 +11,7 @@ public interface FileAddresses {
 	public static String MAP_SEQ_DURATION_INDEX = "data/extracted_seq/seq-duration-index-mapping";
 	// store the map<activity id, list<index of seq and duration patterns>
 	// store the mined pattern
-	public static String PATTERN = "data/mined_pattern/act_";
+	public static String DB = "data/mined_pattern/act_";
 	
 	public static String PATTERN_AFFIX = ".out";
 	
