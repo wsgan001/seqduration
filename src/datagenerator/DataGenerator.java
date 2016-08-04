@@ -48,7 +48,7 @@ public class DataGenerator {
 			result.add(new ArrayList<ActivitySensorAssociation>());
 		}
 		for (int act : folds.keySet()) {
-//			System.out.println("act " + act + " has : " + folds.get(act).size());
+			System.out.println("act " + act + " has : " + folds.get(act).size());
 			for (int i = 0; i < folds.get(act).size(); i++) {
 				for (int index : folds.get(act).get(i)) {
 					result.get(i).add(my_input.get(index));
@@ -86,10 +86,10 @@ public class DataGenerator {
 				result.get(my_input.get(i).getActEvent().getSensorId()).add(i);
 		}
 //		System.out.println("map of act to indices: " + result);
-//		for (int act : result.keySet()) {
-//			System.out.println("act " + act + ": " + result.get(act).size() + " from: " + result.get(act).get(0) + " - "
-//					+ result.get(act).get(result.get(act).size() - 1));
-//		}
+		for (int act : result.keySet()) {
+			System.out.println("act " + act + ": " + result.get(act).size() + " from: " + result.get(act).get(0) + " - "
+					+ result.get(act).get(result.get(act).size() - 1));
+		}
 		return result;
 	}
 

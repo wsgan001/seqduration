@@ -1,4 +1,4 @@
-package datagenerator;
+package weka;
 
 import java.io.FileWriter;
 import java.io.IOException;
@@ -19,9 +19,11 @@ public class WekaFileGenerator {
 	}
 
 	public void generate(final String output_file, final List<ActivitySensorAssociation> the_data) throws IOException {
-		FileWriter fw = new FileWriter(output_file);
+		FileWriter fw = new FileWriter(output_file+".arff");
 		header(fw);
+		fw.write("@data\n");
 		data(fw, the_data);
+		fw.close();
 	}
 
 	private void data(FileWriter fw, final List<ActivitySensorAssociation> the_data) throws IOException {
@@ -50,7 +52,7 @@ public class WekaFileGenerator {
 		for (int i = 0; i < my_numOfSensors; i++) {
 			fw.write("@ATTRIBUTE s" + i + " NUMERIC\n");
 		}
-		fw.write("ATTRIBUTE class {");
+		fw.write("@ATTRIBUTE class {");
 		String act = "";
 		for (int i : my_activities) {
 			act += (ACT_SYMBOL + i + ",");
