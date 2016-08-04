@@ -82,7 +82,7 @@ public class DataGenerator {
 			result.put(i, new ArrayList<Integer>());
 		}
 		for (int i = 0; i < my_input.size(); i++) {
-			if (result.containsKey(my_input.get(i).getActEvent().getSensorId()))
+			if (my_activities.contains(my_input.get(i).getActEvent().getSensorId()))
 				result.get(my_input.get(i).getActEvent().getSensorId()).add(i);
 		}
 //		System.out.println("map of act to indices: " + result);
