@@ -15,6 +15,8 @@ import activity.ActivityUtil;
 import concept.Concept;
 import concept.ConceptUtil;
 import filereader.washington.FileReaderWS;
+import parameters.FileAddresses;
+import segmentation.ActivitySensorAssociation;
 
 public class TestDataImporter {
 	final private static String ADDR = "../Datasets/";
@@ -103,8 +105,20 @@ public class TestDataImporter {
 		}
 	}
 	
+	private static void testAssociation() throws IOException, ClassNotFoundException {
+		FileInputStream fis = new FileInputStream(FileAddresses.RAW_ASSOCIATION);
+		ObjectInputStream ois = new ObjectInputStream(fis);
+		List<ActivitySensorAssociation> list = (List<ActivitySensorAssociation>)ois.readObject();
+		fis.close();
+		ois.close();
+		for(ActivitySensorAssociation asa:list) {
+			asa.print();
+		}
+	}
+	
 	public static void main(String[] args) throws ClassNotFoundException, IOException {
-		TestDataImporter tdi = new TestDataImporter();
-		tdi.testOverlappingActivities();
+//		TestDataImporter tdi = new TestDataImporter();
+//		tdi.testOverlappingActivities();
+		testAssociation();
 	}
 }

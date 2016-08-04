@@ -25,7 +25,11 @@ public class TestMisc {
 	public static void main(String[] args) {
 		String s1 = "210 103 100 ";
 		String s2 = "10";
-		System.out.println(contains(s2, s2));
+//		System.out.println(contains(s2, s2));
+//		System.out.println(Math.ceil(0.6));
+		String s3 = "a1,a2,";
+		s3 = s3.substring(0, s3.length()-1);
+		System.out.println(s3);
 
 		// Map<String, Double> map = new HashMap<String, Double>();
 		// map.put(s2, 1.0);
