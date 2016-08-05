@@ -19,7 +19,7 @@ public class WekaFileGenerator {
 	}
 
 	public void generate(final String output_file, final List<ActivitySensorAssociation> the_data) throws IOException {
-		FileWriter fw = new FileWriter(output_file+".arff");
+		FileWriter fw = new FileWriter(output_file + ".arff");
 		header(fw);
 		fw.write("@data\n");
 		data(fw, the_data);
@@ -28,8 +28,10 @@ public class WekaFileGenerator {
 
 	private void data(FileWriter fw, final List<ActivitySensorAssociation> the_data) throws IOException {
 		for (ActivitySensorAssociation asa : the_data) {
-			writeArray(fw, retrieveSensorData(asa.getSensorEvents()));
-			fw.write(ACT_SYMBOL + asa.getActEvent().getSensorId() + "\n");
+			if (my_activities.contains(asa.getActEvent().getSensorId())) {
+				writeArray(fw, retrieveSensorData(asa.getSensorEvents()));
+				fw.write(ACT_SYMBOL + asa.getActEvent().getSensorId() + "\n");
+			}
 		}
 	}
 

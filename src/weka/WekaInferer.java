@@ -22,16 +22,19 @@ public class WekaInferer {
 		return ds.getDataSet();
 	}
 	
-	public void run() throws Exception {
+	public double run() throws Exception {
 		Instances trainData = getData(my_train_file);
 		if (trainData.classIndex() == -1)
 			trainData.setClassIndex(trainData.numAttributes() - 1);
 		Instances testData = getData(my_test_file);
 		if (testData.classIndex() == -1)
 			testData.setClassIndex(testData.numAttributes() - 1);
+		
 		Evaluation eval = new Evaluation(trainData);
+		my_classifier.buildClassifier(trainData);
 		eval.evaluateModel(my_classifier, testData);
-		System.out.println(eval.toSummaryString());
+//		System.out.println(eval.correct()/testData.size()+": \n"+eval.toSummaryString());
+		return eval.correct()/testData.size();
 	}
 
 }
