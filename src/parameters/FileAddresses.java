@@ -15,7 +15,9 @@ public interface FileAddresses {
 	public static String MAP_SEQ_DURATION_INDEX = "data/extracted_seq/seq-duration-index-mapping";
 	// store the map<activity id, list<index of seq and duration patterns>
 	// store the mined pattern
-	public static String DB = "data/mined_pattern/act_";
+	public static String RAW_DB = "data/mined_pattern_raw/act_";
+
+	public static String SPLIT_DB = "data/mined_pattern_split/act_";
 
 	public static String PATTERN_AFFIX = ".out";
 
@@ -32,4 +34,16 @@ public interface FileAddresses {
 	public static String SPLIT_TRAIN = "data/train_test_split/train_";
 
 	public static String SPLIT_TEST = "data/train_test_split/test_";
+
+	public static String RAW_MAP_PATTERN = "data/mapped_seq_raw/map_seq_durations";
+
+	public static String SPLIT_MAP_PATTERN = "data/mapped_seq_split/map_seq_durations";
+
+	public static String RAW_MAP_INDICES = "data/mapped_seq_raw/map_seq2Indices";
+
+	public static String SPLIT_MAP_INDICES = "data/mapped_seq_split/map_seq2Indices";
+	
+	public static String RAW_MINED_PATTERN = "data/mined_pattern_raw/act_";
+
+	public static String SPLIT_MINED_PATTERN = "data/mined_pattern_split/act_";
 }

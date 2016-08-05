@@ -33,6 +33,8 @@ public class SequentialMiner {
 	private List<String> database;
 
 	private String my_db_file;
+	
+	private String my_candidate_file;
 
 	public Map<String, Double> current_candidates;
 
@@ -51,9 +53,10 @@ public class SequentialMiner {
 	// */
 	// private Map<String, Integer> occurrences;
 
-	public SequentialMiner(final String the_db_file, final double the_support_count, final int the_top_k)
+	public SequentialMiner(final String the_db_file, final String the_cand_file, final double the_support_count, final int the_top_k)
 			throws FileNotFoundException {
 		my_db_file = the_db_file;
+		my_candidate_file = the_cand_file;
 		getDB(the_db_file);
 		support_count = the_support_count * database.size();
 		current_candidates = new HashMap<String, Double>();
@@ -79,7 +82,7 @@ public class SequentialMiner {
 	}
 
 	private void writeCandidates(int k) throws IOException {
-		FileWriter fw = new FileWriter(my_db_file + "." + k + FileAddresses.PATTERN_AFFIX);
+		FileWriter fw = new FileWriter(my_candidate_file + "." + k + FileAddresses.PATTERN_AFFIX);
 		MapUtil.orderAndWrite(current_candidates, fw, my_top_k);
 		fw.close();
 		all_candidates.addAll(current_candidates.keySet());

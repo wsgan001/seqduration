@@ -34,70 +34,65 @@ public class Segmenter {
 
 	public Segmenter(final SensorUtil the_sensors) {
 		my_sensors = the_sensors;
-//		getSemanticSimilarity();
+		// getSemanticSimilarity();
 	}
 
-//	private void getSemanticSimilarity() {
-//		System.out.println("sensor size: " + my_sensors.getSensors().size());
-//		semanticSim = new double[my_sensors.getSensors().size()][my_sensors
-//				.getSensors().size()];
-//		for (int i = 0; i < my_sensors.getSensors().size(); i++) {
-//			for (int j = i; j < my_sensors.getSensors().size(); j++) {
-//				semanticSim[i][j] = my_sensors.similarity(
-//						my_sensors.findSensor(i), my_sensors.findSensor(j));
-//				semanticSim[j][i] = semanticSim[i][j];
-//			}
-//		}
-//		// Print.print2DArray(semanticSim);
-//	}
+	// private void getSemanticSimilarity() {
+	// System.out.println("sensor size: " + my_sensors.getSensors().size());
+	// semanticSim = new double[my_sensors.getSensors().size()][my_sensors
+	// .getSensors().size()];
+	// for (int i = 0; i < my_sensors.getSensors().size(); i++) {
+	// for (int j = i; j < my_sensors.getSensors().size(); j++) {
+	// semanticSim[i][j] = my_sensors.similarity(
+	// my_sensors.findSensor(i), my_sensors.findSensor(j));
+	// semanticSim[j][i] = semanticSim[i][j];
+	// }
+	// }
+	// // Print.print2DArray(semanticSim);
+	// }
 
-	
 	public void segment(final List<ActivitySensorAssociation> the_events) throws IOException {
-		
+
 		my_seg_sensor_events = new ArrayList<List<SensorEvent>>();
-		for(ActivitySensorAssociation asa: the_events) {
+		for (ActivitySensorAssociation asa : the_events) {
 			my_seg_sensor_events.add(asa.getSensorEvents());
 		}
-//		for (SensorEvent se : the_events) {
-//			boolean found = false;
-//			if (!my_seg_sensor_events.isEmpty()) {
-//				for (int i = 0; i < my_seg_sensor_events.size(); i++) {
-//					if (semanticSim[se.getSensorId()][my_seg_sensor_events
-//							.get(i).get(0).getSensorId()] >= SEMANTIC_THRESHOLD) {
-//						my_seg_sensor_events.get(i).add(se);
-//						found = true;
-//						break;
-//					}
-//				}
-//			}
-//			if (!found) {
-//				List<SensorEvent> l = new ArrayList<SensorEvent>();
-//				l.add(se);
-//				my_seg_sensor_events.add(l);
-//			}
-//		}
-//		{
-//			FileOutputStream fos = new FileOutputStream(FileAddresses.SE_SEG);
-//			ObjectOutputStream oos = new ObjectOutputStream(fos);
-//			oos.writeObject(my_seg_sensor_events);
-//			oos.close();
-//			fos.close();
-//		}
+		// for (SensorEvent se : the_events) {
+		// boolean found = false;
+		// if (!my_seg_sensor_events.isEmpty()) {
+		// for (int i = 0; i < my_seg_sensor_events.size(); i++) {
+		// if (semanticSim[se.getSensorId()][my_seg_sensor_events
+		// .get(i).get(0).getSensorId()] >= SEMANTIC_THRESHOLD) {
+		// my_seg_sensor_events.get(i).add(se);
+		// found = true;
+		// break;
+		// }
+		// }
+		// }
+		// if (!found) {
+		// List<SensorEvent> l = new ArrayList<SensorEvent>();
+		// l.add(se);
+		// my_seg_sensor_events.add(l);
+		// }
+		// }
+		// {
+		// FileOutputStream fos = new FileOutputStream(FileAddresses.SE_SEG);
+		// ObjectOutputStream oos = new ObjectOutputStream(fos);
+		// oos.writeObject(my_seg_sensor_events);
+		// oos.close();
+		// fos.close();
+		// }
 	}
 
-	public void retrieveSeq() throws IOException {
+	public void retrieveSeq(final String output_addr) throws IOException {
 		Map<String, DescriptiveStatistics> seq_durations = new TreeMap<String, DescriptiveStatistics>();
 		for (List<SensorEvent> l : my_seg_sensor_events) {
 			for (int i = 1; i < l.size(); i++) {
-				String s = l.get(i - 1).getSensorId() + Symbols.SEQ_SEPARATOR
-						+ l.get(i).getSensorId();
+				String s = l.get(i - 1).getSensorId() + Symbols.SEQ_SEPARATOR + l.get(i).getSensorId();
 				if (!seq_durations.containsKey(s)) {
 					seq_durations.put(s, new DescriptiveStatistics());
 				}
-				seq_durations.get(s)
-						.addValue(
-								(l.get(i).getStartTime() - l.get(i - 1)
-										.getStartTime()) / 1000);
+				seq_durations.get(s).addValue((l.get(i).getStartTime() - l.get(i - 1).getStartTime()) / 1000);
 			}
 		}
 		my_seq_dur_clusters = new TreeMap<String, List<DescriptiveStatistics>>();
@@ -107,8 +102,7 @@ public class Segmenter {
 		}
 
 		{
-			FileOutputStream fos = new FileOutputStream(
-					FileAddresses.SEQUENCE_CLUSTER_DURATION);
+			FileOutputStream fos = new FileOutputStream(output_addr);
 			ObjectOutputStream oos = new ObjectOutputStream(fos);
 			oos.writeObject(my_seq_dur_clusters);
 			oos.close();
@@ -117,15 +111,15 @@ public class Segmenter {
 	}
 
 	// map the string and durations into indices
-	public void map() throws IOException {
+	public void map(final String output_addr) throws IOException {
 		List<String> mapping = new ArrayList<String>();
-		for(String s: my_seq_dur_clusters.keySet()) {
-			for(int i=0; i< my_seq_dur_clusters.get(s).size(); i++) {
-				mapping.add(s+Symbols.DURATION_SEPARATOR+i);
+		for (String s : my_seq_dur_clusters.keySet()) {
+			for (int i = 0; i < my_seq_dur_clusters.get(s).size(); i++) {
+				mapping.add(s + Symbols.DURATION_SEPARATOR + i);
 			}
 		}
 		{
-			FileOutputStream fos = new FileOutputStream(FileAddresses.MAP_SEQ_DURATION_INDEX);
+			FileOutputStream fos = new FileOutputStream(output_addr);
 			ObjectOutputStream oos = new ObjectOutputStream(fos);
 			oos.writeObject(mapping);
 			oos.close();

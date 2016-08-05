@@ -12,12 +12,13 @@ import segmentation.ActivitySensorAssociation;
 public class TestPatternMapper {
 
 	public static void run() throws IOException, ClassNotFoundException {
-		PatternMapper pm = new PatternMapper();
-		FileInputStream fis = new FileInputStream(FileAddresses.SE_SEG);
+		PatternMapper pm = new PatternMapper(FileAddresses.SPLIT_MAP_PATTERN, FileAddresses.SPLIT_MAP_INDICES);
+		FileInputStream fis = new FileInputStream(FileAddresses.SPLIT_ASSOCIATION);
+//				(FileAddresses.SE_SEG);
 		ObjectInputStream ois = new ObjectInputStream(fis);
 		List<ActivitySensorAssociation> input = (List<ActivitySensorAssociation>) ois
 				.readObject();
-		pm.write(input);
+		pm.write(input, FileAddresses.SPLIT_DB);
 	}
 	
 	public static void getMapping() throws IOException, ClassNotFoundException {

@@ -21,10 +21,9 @@ public class PatternMapper {
 
 	private Map<String, List<DescriptiveStatistics>> my_seq2Clusters;
 
-	public PatternMapper() throws IOException, ClassNotFoundException {
+	public PatternMapper(final String map2SeqDuration, final String map2Indices) throws IOException, ClassNotFoundException {
 		{
-			FileInputStream fis = new FileInputStream(
-					FileAddresses.SEQUENCE_CLUSTER_DURATION);
+			FileInputStream fis = new FileInputStream(map2SeqDuration);
 			ObjectInputStream ois = new ObjectInputStream(fis);
 			my_seq2Clusters = (Map<String, List<DescriptiveStatistics>>) ois
 					.readObject();
@@ -32,8 +31,7 @@ public class PatternMapper {
 			fis.close();
 		}
 		{
-			FileInputStream fis = new FileInputStream(
-					FileAddresses.MAP_SEQ_DURATION_INDEX);
+			FileInputStream fis = new FileInputStream(map2Indices);
 			ObjectInputStream ois = new ObjectInputStream(fis);
 			my_seq2index = (List<String>) ois.readObject();
 			ois.close();
@@ -41,10 +39,10 @@ public class PatternMapper {
 		}
 	}
 
-	private FileWriter[] initialiseFileWriter() throws IOException {
+	private FileWriter[] initialiseFileWriter(final String addr) throws IOException {
 		FileWriter[] fw = new FileWriter[NUM_OF_ACT];
 		for (int i = 0; i < NUM_OF_ACT; i++) {
-			fw[i] = new FileWriter(FileAddresses.DB + i);
+			fw[i] = new FileWriter(addr + i);
 		}
 		return fw;
 	}
@@ -93,8 +91,8 @@ public class PatternMapper {
 		}
 		return id;
 	}
-	public void write(List<ActivitySensorAssociation> input) throws IOException {
-		FileWriter[] fw = initialiseFileWriter();
+	public void write(List<ActivitySensorAssociation> input, final String addr) throws IOException {
+		FileWriter[] fw = initialiseFileWriter(addr);
 		for (ActivitySensorAssociation asa : input) {
 			fw[asa.getActEvent().getSensorId()].write(getList(asa
 					.getSensorEvents()));

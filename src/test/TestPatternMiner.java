@@ -17,36 +17,36 @@ public class TestPatternMiner {
 	public static void mine() throws IOException {
 		for (int i = 0; i < ACT_SIZE; i++) {
 			System.out.println(i);
-//			PatternMiner pm = new PatternMiner(FileAddresses.PATTERN + i,
-//					support_ratio);
-//			pm.mine();
-			SequentialMiner sm = new SequentialMiner(FileAddresses.DB+i,support_ratio,topK);
+			// PatternMiner pm = new PatternMiner(FileAddresses.PATTERN + i,
+			// support_ratio);
+			// pm.mine();
+			SequentialMiner sm = new SequentialMiner(FileAddresses.RAW_DB + i, FileAddresses.RAW_MINED_PATTERN + i,
+					support_ratio, topK);
 			sm.buildInternalModel();
-//			{
-//				FileOutputStream fos = new FileOutputStream(FileAddresses.PATTERN+i+FileAddresses.PATTERN_AFFIX);
-//				ObjectOutputStream oos = new ObjectOutputStream(fos);
-//				oos.writeObject(sm.candidates);
-//				oos.close();
-//				fos.close();
-//			}
+			// {
+			// FileOutputStream fos = new
+			// FileOutputStream(FileAddresses.PATTERN+i+FileAddresses.PATTERN_AFFIX);
+			// ObjectOutputStream oos = new ObjectOutputStream(fos);
+			// oos.writeObject(sm.candidates);
+			// oos.close();
+			// fos.close();
+			// }
 		}
 	}
 
 	public static void selectP() throws IOException {
 		for (int i = 0; i < ACT_SIZE; i++) {
 			System.out.println(i);
-			PatternMiner pm = new PatternMiner(FileAddresses.DB + i,
-					support_ratio);
+			PatternMiner pm = new PatternMiner(FileAddresses.RAW_DB + i, support_ratio);
 			pm.selectPattern();
 		}
 	}
-	
-	
+
 	public static void main(String[] args) throws IOException {
 		System.out.println("mining");
 		mine();
-//		System.out.println("selecting");
-//		selectP();
+		// System.out.println("selecting");
+		// selectP();
 	}
-	
+
 }

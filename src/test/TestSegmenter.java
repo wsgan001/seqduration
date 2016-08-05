@@ -30,15 +30,15 @@ public class TestSegmenter {
 
 	public void segment() throws IOException, ClassNotFoundException {
 		Segmenter seg = new Segmenter(my_data.my_sensors);
-		FileInputStream fis = new FileInputStream(FileAddresses.SE_SEG);
+		FileInputStream fis = new FileInputStream(FileAddresses.SPLIT_ASSOCIATION);
 		ObjectInputStream ois = new ObjectInputStream(fis);
 		List<ActivitySensorAssociation> list = (List<ActivitySensorAssociation>)ois.readObject();
 		ois.close();
 		fis.close();
 		seg.segment(list);
 		// List<List<SensorEvent>> segs = seg.my_seg_sensor_events;
-		seg.retrieveSeq();
-		seg.map();
+		seg.retrieveSeq(FileAddresses.SPLIT_MAP_PATTERN);
+		seg.map(FileAddresses.SPLIT_MAP_INDICES);
 		// System.out.println("first: " + segs.get(0).get(0).print());
 		// System.out.println("last: " + segs.get(segs.size() -
 		// 1).get(segs.get(segs.size()-1).size()-1).print());
