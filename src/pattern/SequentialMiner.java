@@ -33,12 +33,12 @@ public class SequentialMiner {
 	private List<String> database;
 
 	private String my_db_file;
-	
+
 	private String my_candidate_file;
 
 	public Map<String, Double> current_candidates;
 
-	public Set<String> all_candidates;
+	public Map<String, Set<Integer>> all_candidates;
 
 	public int my_top_k;
 
@@ -53,14 +53,14 @@ public class SequentialMiner {
 	// */
 	// private Map<String, Integer> occurrences;
 
-	public SequentialMiner(final String the_db_file, final String the_cand_file, final double the_support_count, final int the_top_k)
-			throws FileNotFoundException {
+	public SequentialMiner(final String the_db_file, final String the_cand_file, final double the_support_count,
+			final int the_top_k) throws FileNotFoundException {
 		my_db_file = the_db_file;
 		my_candidate_file = the_cand_file;
 		getDB(the_db_file);
 		support_count = the_support_count * database.size();
 		current_candidates = new HashMap<String, Double>();
-		all_candidates = new HashSet<String>();
+		all_candidates = new HashMap<String, Set<Integer>>();
 		my_top_k = the_top_k;
 	}
 
@@ -85,28 +85,34 @@ public class SequentialMiner {
 		FileWriter fw = new FileWriter(my_candidate_file + "." + k + FileAddresses.PATTERN_AFFIX);
 		MapUtil.orderAndWrite(current_candidates, fw, my_top_k);
 		fw.close();
-		all_candidates.addAll(current_candidates.keySet());
+		// all_candidates.addAll(current_candidates.keySet());
 		current_candidates = new HashMap<String, Double>();
 	}
 
+	private Set<String> getUniqueItems(final String line) {
+		String[] items = line.split(SEPERATOR);
+		Set<String> result = new HashSet<String>();
+		for (String i : items) {
+			result.add(i);
+		}
+		return result;
+	}
+
 	private void oneItemCandidate() throws IOException {
-		Map<String, Double> result = new HashMap<String, Double>();
-		for (String transaction : database) {
-			String[] items = transaction.split(SEPERATOR);
+		Map<String, Set<Integer>> map = new HashMap<String, Set<Integer>>();
+		for (int i = 0; i < database.size(); i++) {
+			Set<String> items = getUniqueItems(database.get(i));
 			for (String item : items) {
-				double count = 0;
-				if (result.containsKey(item + "")) {
-					count = result.get(item + "");
+				if (!map.containsKey(item)) {
+					map.put(item, new HashSet<Integer>());
 				}
-				count = count + 1;
-				result.put(item, count);
+				map.get(item).add(i);
 			}
 		}
-		// Map<String, Double> cands = new HashMap<String, Double>();
-		for (String cand : result.keySet()) {
-			if (cand != null && !cand.isEmpty() && result.get(cand) >= support_count) {
-				current_candidates.put(cand, result.get(cand));
-				// System.out.println(cand+" "+result.get(cand));
+		for (String s : map.keySet()) {
+			if (map.get(s).size() >= support_count) {
+				all_candidates.put(s, map.get(s));
+				current_candidates.put(s, map.get(s).size() * 1.0);
 			}
 		}
 		// candidates.add(0, cands);
@@ -120,13 +126,7 @@ public class SequentialMiner {
 		do {
 			System.out.println("pattern round k: " + k);
 			// generate the kth round pattern candidates
-			Map<String, Double> first_count = generate(k);
-			count(first_count);
-			for (String p : first_count.keySet()) {
-				if (first_count.get(p) >= support_count) {
-					current_candidates.put(p, first_count.get(p));
-				}
-			}
+			generate(k);
 			if (!current_candidates.isEmpty()) {
 				writeCandidates(k);
 			} else {
@@ -137,39 +137,26 @@ public class SequentialMiner {
 		} while (!stop);
 	}
 
-	/**
-	 * go through the database one by one to count each pattern. One pass
-	 * 
-	 * @param new_patterns
-	 * @return
-	 */
-	private void count(Map<String, Double> new_patterns) {
-		// if (new_patterns.size() > 10000) {
-		// countByPattern(new_patterns, result);
-		// } else {
-		for (String one_transaction : database) {
-			for (String np : new_patterns.keySet()) {
-				if (contains(one_transaction, np)) {
-					new_patterns.put(np, new_patterns.get(np) + 1);
-				}
-			}
-		}
-		// }
-	}
-
-	private void countByPattern(Set<String> new_patterns, Map<String, Double> result) {
-		for (String np : new_patterns) {
-			for (String one_transaction : database) {
-				if (contains(one_transaction, np)) {
-					if (result.containsKey(np)) {
-						result.put(np, result.get(np) + 1);
-					} else {
-						result.put(np, 1.0);
+	private void generate(int k) {
+		Map<String, Set<Integer>> result = new HashMap<String, Set<Integer>>();
+		for (String l : all_candidates.keySet()) {
+			for (String r : all_candidates.keySet()) {
+				String p = l + SEPERATOR + r;
+				Set<Integer> indices = new HashSet<Integer>();
+				if (p.split(SEPERATOR).length == k + 1 && !all_candidates.containsKey(p)) {
+					for (int li : all_candidates.get(l)) {
+						if (all_candidates.get(r).contains(li) && contains(database.get(li), p)) {
+							indices.add(li);
+						}
 					}
-					break;
+				}
+				if (indices.size() >= support_count) {
+					current_candidates.put(p, indices.size() * 1.0);
+					result.put(p, indices);
 				}
 			}
 		}
+		all_candidates.putAll(result);
 	}
 
 	private boolean contains(final String biggerS, final String smallS) {
@@ -189,29 +176,4 @@ public class SequentialMiner {
 		return false;
 	}
 
-	/**
-	 * generate the kth round candidates.
-	 * 
-	 * @param k
-	 * @return
-	 */
-	private Map<String, Double> generate(int k) {
-		// System.out.println("k=" + k + " in generate: " +
-		// candidate_k_1.size());
-		Map<String, Double> npatterns = new HashMap<String, Double>();
-		current_candidates = new HashMap<String, Double>();
-		for (String p : all_candidates) {
-			for (String pn : all_candidates) {
-				String new_pattern = p + SEPERATOR + pn;
-				// System.out.println(new_pattern + " "
-				// + new_pattern.split(SEPERATOR).length);
-				if (!all_candidates.contains(new_pattern) && !npatterns.containsKey(new_pattern)
-						&& new_pattern.split(SEPERATOR).length == k + 1) {
-					npatterns.put(new_pattern, 0.0);
-				}
-			}
-		}
-		System.out.println(k + "-length patterns: " + npatterns.size());
-		return npatterns;
-	}
 }

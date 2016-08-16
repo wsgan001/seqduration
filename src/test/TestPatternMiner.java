@@ -11,11 +11,11 @@ import pattern.SequentialMiner;
 public class TestPatternMiner {
 
 	final private static int ACT_SIZE = 25;
-	final private static double support_ratio = 0.5;
+	final private static double support_ratio = 0.6;
 	final private static int topK = 20;
 
 	public static void mine() throws IOException {
-		for (int i = 0; i < ACT_SIZE; i++) {
+		for (int i = 21; i < 19; i++) {
 			System.out.println(i);
 			// PatternMiner pm = new PatternMiner(FileAddresses.PATTERN + i,
 			// support_ratio);
@@ -23,6 +23,7 @@ public class TestPatternMiner {
 			SequentialMiner sm = new SequentialMiner(FileAddresses.RAW_DB + i, FileAddresses.RAW_MINED_PATTERN + i,
 					support_ratio, topK);
 			sm.buildInternalModel();
+			Runtime.getRuntime().freeMemory();
 			// {
 			// FileOutputStream fos = new
 			// FileOutputStream(FileAddresses.PATTERN+i+FileAddresses.PATTERN_AFFIX);
