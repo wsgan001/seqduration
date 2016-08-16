@@ -1,4 +1,4 @@
-package pattern;
+package patterncreater;
 
 import java.util.ArrayList;
 import java.util.HashSet;

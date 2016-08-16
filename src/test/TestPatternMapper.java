@@ -6,7 +6,7 @@ import java.io.ObjectInputStream;
 import java.util.List;
 
 import parameters.FileAddresses;
-import pattern.PatternMapper;
+import patterncreater.PatternMapper;
 import segmentation.ActivitySensorAssociation;
 
 public class TestPatternMapper {

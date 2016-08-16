@@ -1,4 +1,4 @@
-package pattern;
+package patterncreater;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -15,6 +15,8 @@ import java.util.Set;
 import parameters.FileAddresses;
 
 public class SequentialMiner {
+
+	final private static int MAX_LENGTH = 8;
 
 	final protected static String CANDIDATE = ".tmp";
 
@@ -83,7 +85,7 @@ public class SequentialMiner {
 
 	private void writeCandidates(int k) throws IOException {
 		FileWriter fw = new FileWriter(my_candidate_file + "." + k + FileAddresses.PATTERN_AFFIX);
-		MapUtil.orderAndWrite(current_candidates, fw, my_top_k);
+		MapUtil.orderAndWrite(current_candidates, fw, my_top_k, database.size());
 		fw.close();
 		// all_candidates.addAll(current_candidates.keySet());
 		current_candidates = new HashMap<String, Double>();
@@ -134,7 +136,7 @@ public class SequentialMiner {
 			}
 			k++;
 			Runtime.getRuntime().freeMemory();
-		} while (!stop);
+		} while (!stop || k < MAX_LENGTH);
 	}
 
 	private void generate(int k) {

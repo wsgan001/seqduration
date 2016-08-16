@@ -1,7 +1,8 @@
-package pattern;
+package patterncreater;
 
 import java.io.FileWriter;
 import java.io.IOException;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -13,8 +14,10 @@ import java.util.Map;
 import parameters.Symbols;
 
 public class MapUtil {
+	
+	final private static DecimalFormat df = new DecimalFormat("#.##");
 
-	public static void orderAndWrite(Map<String, Double> map, FileWriter fw, int the_top_k) throws IOException {
+	public static void orderAndWrite(Map<String, Double> map, FileWriter fw, int the_top_k, int the_size) throws IOException {
 		List list = new ArrayList(map.entrySet());
 		Collections.sort(list, new Comparator() {
 			public int compare(Object o1, Object o2) {
@@ -26,7 +29,7 @@ public class MapUtil {
 		for (Iterator it = list.iterator(); it.hasNext();) {
 			if (count++ < the_top_k) {
 				Map.Entry<String, Double> entry = (Map.Entry<String, Double>) it.next();
-				fw.write(entry.getKey() + Symbols.PATTERN_SEPARATOR_IT + entry.getValue().toString() + "\n");
+				fw.write(entry.getKey() + Symbols.PATTERN_SEPARATOR_IT + df.format(entry.getValue()/the_size) + "\n");
 //				System.out.println(entry.getKey()+Symbols.PATTERN_SEPARATOR_IT+entry.getValue().toString()+"\n");
 			} else {
 				break;
@@ -39,7 +42,7 @@ public class MapUtil {
 		map.put("A", 0.5);
 		map.put("B", 0.3);
 		map.put("CD", 0.9);
-		orderAndWrite(map, null, 2);
+//		orderAndWrite(map, null, 2);
 
 	}
 }

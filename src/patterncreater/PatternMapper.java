@@ -1,4 +1,4 @@
-package pattern;
+package patterncreater;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;

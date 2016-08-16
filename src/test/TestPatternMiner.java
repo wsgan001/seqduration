@@ -5,8 +5,8 @@ import java.io.IOException;
 import java.io.ObjectOutputStream;
 
 import parameters.FileAddresses;
-import pattern.PatternMiner;
-import pattern.SequentialMiner;
+import patterncreater.PatternMiner;
+import patterncreater.SequentialMiner;
 
 public class TestPatternMiner {
 
@@ -15,7 +15,7 @@ public class TestPatternMiner {
 	final private static int topK = 20;
 
 	public static void mine() throws IOException {
-		for (int i = 21; i < 19; i++) {
+		for (int i = 0; i < ACT_SIZE; i++) {
 			System.out.println(i);
 			// PatternMiner pm = new PatternMiner(FileAddresses.PATTERN + i,
 			// support_ratio);

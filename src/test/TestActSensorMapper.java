@@ -9,8 +9,8 @@ import java.io.ObjectOutputStream;
 import java.util.List;
 
 import parameters.FileAddresses;
-import pattern.ActivitySensorMapper;
-import pattern.ActivitySensorMapper2;
+import patterncreater.ActivitySensorMapper;
+import patterncreater.ActivitySensorMapper2;
 import segmentation.ActivitySensorAssociation;
 import segmentation.ActivitySensorEventUtil;
 import sensor.SensorEvent;
