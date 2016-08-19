@@ -23,22 +23,23 @@ import filereader.washington.FileReaderWS;
 public class TestSegmenter {
 
 	private TestDataImporter my_data;
-	
+
 	public TestSegmenter() throws ClassNotFoundException, IOException {
 		my_data = new TestDataImporter();
 	}
 
-	public void segment() throws IOException, ClassNotFoundException {
+	public void segment(final String raw_train_asa, final String raw_train_sq, final String raw_train_sq_indices)
+			throws IOException, ClassNotFoundException {
 		Segmenter seg = new Segmenter(my_data.my_sensors);
-		FileInputStream fis = new FileInputStream(FileAddresses.SPLIT_ASSOCIATION);
+		FileInputStream fis = new FileInputStream(raw_train_asa);
 		ObjectInputStream ois = new ObjectInputStream(fis);
-		List<ActivitySensorAssociation> list = (List<ActivitySensorAssociation>)ois.readObject();
+		List<ActivitySensorAssociation> list = (List<ActivitySensorAssociation>) ois.readObject();
 		ois.close();
 		fis.close();
 		seg.segment(list);
 		// List<List<SensorEvent>> segs = seg.my_seg_sensor_events;
-		seg.retrieveSeq(FileAddresses.SPLIT_MAP_PATTERN);
-		seg.map(FileAddresses.SPLIT_MAP_INDICES);
+		seg.retrieveSeq(raw_train_sq);
+		seg.map(raw_train_sq_indices);
 		// System.out.println("first: " + segs.get(0).get(0).print());
 		// System.out.println("last: " + segs.get(segs.size() -
 		// 1).get(segs.get(segs.size()-1).size()-1).print());
@@ -49,16 +50,14 @@ public class TestSegmenter {
 
 	public void testSeq() throws IOException, ClassNotFoundException {
 		{
-			FileInputStream fis = new FileInputStream(
-					FileAddresses.SEQUENCE_CLUSTER_DURATION);
+			FileInputStream fis = new FileInputStream(FileAddresses.SEQUENCE_CLUSTER_DURATION);
 			ObjectInputStream ois = new ObjectInputStream(fis);
 			Map<String, List<DescriptiveStatistics>> cluster = (Map<String, List<DescriptiveStatistics>>) ois
 					.readObject();
 			ois.close();
 			fis.close();
 			int index = 0;
-			System.out.println("number of unique 2-length sequences: "
-					+ cluster.size());
+			System.out.println("number of unique 2-length sequences: " + cluster.size());
 			for (String s : cluster.keySet()) {
 				System.out.println(s);
 				index += cluster.get(s).size();
@@ -66,8 +65,7 @@ public class TestSegmenter {
 			System.out.println("total: " + index);
 		}
 		{
-			FileInputStream fis = new FileInputStream(
-					FileAddresses.MAP_SEQ_DURATION_INDEX);
+			FileInputStream fis = new FileInputStream(FileAddresses.MAP_SEQ_DURATION_INDEX);
 			ObjectInputStream ois = new ObjectInputStream(fis);
 			List<String> l = (List<String>) ois.readObject();
 			ois.close();
@@ -79,10 +77,12 @@ public class TestSegmenter {
 		}
 	}
 
-	public static void main(String[] args) throws IOException,
-			ClassNotFoundException {
+	public static void main(String[] args) throws IOException, ClassNotFoundException {
 		TestSegmenter ts = new TestSegmenter();
-		 ts.segment();
-//		ts.testSeq();
+		for (int i = 0; i < 10; i++) {
+			ts.segment(FileAddresses.RAW_TRAIN_ASA + i, FileAddresses.RAW_TRAIN_MAP_SQ + i,
+					FileAddresses.RAW_TRAIN_MAP_INDICES + i);
+		}
+		// ts.testSeq();
 	}
 }

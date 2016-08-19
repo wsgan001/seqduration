@@ -42,7 +42,7 @@ public class PatternMapper {
 	private FileWriter[] initialiseFileWriter(final String addr) throws IOException {
 		FileWriter[] fw = new FileWriter[NUM_OF_ACT];
 		for (int i = 0; i < NUM_OF_ACT; i++) {
-			fw[i] = new FileWriter(addr + i);
+			fw[i] = new FileWriter(addr + "_"+i);
 		}
 		return fw;
 	}
@@ -75,7 +75,7 @@ public class PatternMapper {
 			result += findIndex(pair + Symbols.DURATION_SEPARATOR + cID)
 					+ Symbols.PATTERN_SEPARATOR;
 		}
-		return result + Symbols.PATTERN_END + "\n";
+		return result + Symbols.PATTERN_END;
 	}
 
 	private int findIndex(String s) {

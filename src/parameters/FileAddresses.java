@@ -46,4 +46,17 @@ public interface FileAddresses {
 	public static String RAW_MINED_PATTERN = "data/mined_pattern_raw/act_";
 
 	public static String SPLIT_MINED_PATTERN = "data/mined_pattern_split/act_";
+	
+	// file addresses for train and test data to do sequential mining
+	public static String RAW_TRAIN_ASA = "data/raw_train/asa/train_";
+	
+	public static String RAW_TRAIN_MAP_SQ = "data/raw_train/map/seq_";
+	
+	public static String RAW_TRAIN_MAP_INDICES = "data/raw_train/map/indices_";
+	
+	public static String RAW_TRAIN_DB = "data/raw_train/db/act_";
+	
+	public static String RAW_TRAIN_PATTERN = "data/raw_train/mipatterns/act_";
+	
+	
 }

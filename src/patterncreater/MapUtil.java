@@ -18,6 +18,8 @@ public class MapUtil {
 	final private static DecimalFormat df = new DecimalFormat("#.##");
 
 	public static void orderAndWrite(Map<String, Double> map, FileWriter fw, int the_top_k, int the_size) throws IOException {
+//		System.out.println("patterns: ");
+//		System.out.println(map);
 		List list = new ArrayList(map.entrySet());
 		Collections.sort(list, new Comparator() {
 			public int compare(Object o1, Object o2) {
@@ -26,11 +28,14 @@ public class MapUtil {
 			}
 		});
 		int count = 0;
+//		System.out.println("write: ");
 		for (Iterator it = list.iterator(); it.hasNext();) {
+//			System.out.println("it: ");
 			if (count++ < the_top_k) {
+//				System.out.println("top k: "+count);
 				Map.Entry<String, Double> entry = (Map.Entry<String, Double>) it.next();
 				fw.write(entry.getKey() + Symbols.PATTERN_SEPARATOR_IT + df.format(entry.getValue()/the_size) + "\n");
-//				System.out.println(entry.getKey()+Symbols.PATTERN_SEPARATOR_IT+entry.getValue().toString()+"\n");
+//				System.out.println("key: "+entry.getKey()+Symbols.PATTERN_SEPARATOR_IT+entry.getValue().toString()+"\n");
 			} else {
 				break;
 			}

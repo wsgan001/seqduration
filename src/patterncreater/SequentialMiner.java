@@ -13,6 +13,7 @@ import java.util.Scanner;
 import java.util.Set;
 
 import parameters.FileAddresses;
+import parameters.Symbols;
 
 public class SequentialMiner {
 
@@ -47,6 +48,8 @@ public class SequentialMiner {
 	/**
 	 * Map<a string consisting of ids of the previous-k situations, Map<id for
 	 * the next situation, probability>>
+	 * 
+	 * @throws IOException
 	 */
 	// private Map<String, Map<String, Double>> model;
 
@@ -56,30 +59,102 @@ public class SequentialMiner {
 	// private Map<String, Integer> occurrences;
 
 	public SequentialMiner(final String the_db_file, final String the_cand_file, final double the_support_count,
-			final int the_top_k) throws FileNotFoundException {
+			final int the_top_k) throws IOException {
 		my_db_file = the_db_file;
 		my_candidate_file = the_cand_file;
-		getDB(the_db_file);
-		support_count = the_support_count * database.size();
-		current_candidates = new HashMap<String, Double>();
-		all_candidates = new HashMap<String, Set<Integer>>();
+		database = PatternUtil.getDB(the_db_file);
 		my_top_k = the_top_k;
+		if (!database.isEmpty()) {
+			if (!prescreen()) {
+				allTheSame();
+			} else {
+//				support_count = the_support_count * database.size();
+//				current_candidates = new HashMap<String, Double>();
+//				all_candidates = new HashMap<String, Set<Integer>>();
+//				my_top_k = the_top_k;
+//				buildInternalModel();
+				shortcut();
+			}
+		}
 	}
 
-	private void getDB(final String the_db_file) throws FileNotFoundException {
-		Scanner sc = new Scanner(new File(the_db_file));
-		database = new ArrayList<String>();
-		while (sc.hasNextLine()) {
-			String line = sc.nextLine();
-			String s = "";
-			String[] split = line.split(SEPERATOR);
-			for (int i = 0; i < split.length; i++) {
-				if (!split[i].contains("-") && !split[i].isEmpty()) {
-					s += split[i] + SEPERATOR;
+	/**
+	 * check if all the instances in the db are identical.
+	 */
+	private boolean prescreen() {
+		String s = database.get(0);
+		boolean notSame = false;
+		for (int i = 1; i < database.size(); i++) {
+			if (!database.get(i).equals(s)) {
+				notSame = true;
+			}
+		}
+		return notSame;
+	}
+
+	private void allTheSame() throws IOException {
+		String s = database.get(0);
+		Set<String> unique = new HashSet<String>();
+		String[] split = s.split(Symbols.DB_SEPARATOR);
+		for (int k = 1; k <= split.length; k++) {
+			FileWriter fw = new FileWriter(my_candidate_file + "." + k + FileAddresses.PATTERN_AFFIX);
+			for (int i = 0; i < split.length - k; i++) {
+				String p = "";
+				for (int ki = i; ki < i + k; ki++) {
+					p += split[ki] + Symbols.DB_SEPARATOR;
+				}
+				if (!unique.contains(p)) {
+					fw.write(p + Symbols.PATTERN_SEPARATOR_IT + "1.0\n");
+					unique.add(p);
+				}
+
+			}
+			fw.close();
+		}
+	}
+
+	private void shortcut() throws IOException {
+		int k = 1;
+		do {
+			if (!retrieve(k)) {
+				break;
+			}
+			count();
+//			System.out.println(current_candidates);
+			writeCandidates(k-1);
+			k++;
+		} while (true);
+	}
+
+	private boolean retrieve(final int lengthOfSeg) {
+		current_candidates = new HashMap<String, Double>();
+		for (int i = 0; i < database.size(); i++) {
+			String[] split = database.get(i).split(Symbols.DB_SEPARATOR);
+			for (int j = 0; j < split.length - lengthOfSeg; j++) {
+				String p = "";
+				for (int kj = j; kj < j + lengthOfSeg; kj++) {
+					p += split[kj] + Symbols.DB_SEPARATOR;
+				}
+				if (!current_candidates.containsKey(p)) {
+					current_candidates.put(p, 0.0);
 				}
 			}
-			if (!s.isEmpty())
-				database.add(s);
+		}
+		if (current_candidates.isEmpty()) {
+			return false;
+		} else {
+			return true;
+		}
+	}
+
+	private void count() {
+		for (int i = 0; i < database.size(); i++) {
+			for (String p : current_candidates.keySet()) {
+				if (PatternUtil.contains(database.get(i), p)) {
+					double c = current_candidates.get(p) + 1;
+					current_candidates.put(p, c);
+				}
+			}
 		}
 	}
 
@@ -91,19 +166,10 @@ public class SequentialMiner {
 		current_candidates = new HashMap<String, Double>();
 	}
 
-	private Set<String> getUniqueItems(final String line) {
-		String[] items = line.split(SEPERATOR);
-		Set<String> result = new HashSet<String>();
-		for (String i : items) {
-			result.add(i);
-		}
-		return result;
-	}
-
 	private void oneItemCandidate() throws IOException {
 		Map<String, Set<Integer>> map = new HashMap<String, Set<Integer>>();
 		for (int i = 0; i < database.size(); i++) {
-			Set<String> items = getUniqueItems(database.get(i));
+			Set<String> items = PatternUtil.getUniqueItems(database.get(i));
 			for (String item : items) {
 				if (!map.containsKey(item)) {
 					map.put(item, new HashSet<Integer>());
@@ -136,7 +202,7 @@ public class SequentialMiner {
 			}
 			k++;
 			Runtime.getRuntime().freeMemory();
-		} while (!stop || k < MAX_LENGTH);
+		} while (!stop && k < MAX_LENGTH);
 	}
 
 	private void generate(int k) {
@@ -147,7 +213,7 @@ public class SequentialMiner {
 				Set<Integer> indices = new HashSet<Integer>();
 				if (p.split(SEPERATOR).length == k + 1 && !all_candidates.containsKey(p)) {
 					for (int li : all_candidates.get(l)) {
-						if (all_candidates.get(r).contains(li) && contains(database.get(li), p)) {
+						if (all_candidates.get(r).contains(li) && PatternUtil.contains(database.get(li), p)) {
 							indices.add(li);
 						}
 					}
@@ -159,23 +225,6 @@ public class SequentialMiner {
 			}
 		}
 		all_candidates.putAll(result);
-	}
-
-	private boolean contains(final String biggerS, final String smallS) {
-		String[] bs = biggerS.trim().split(" ");
-		String[] ss = smallS.trim().split(" ");
-		int sindex = 0;
-		for (int i = 0; i < bs.length; i++) {
-			if (sindex < ss.length && bs[i].equals(ss[sindex])) {
-				sindex++;
-			} else if (sindex == ss.length) {
-				return true;
-			}
-		}
-		// if (sindex == ss.length) {
-		// return true;
-		// }
-		return false;
 	}
 
 }
