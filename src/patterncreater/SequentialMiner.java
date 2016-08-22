@@ -64,15 +64,14 @@ public class SequentialMiner {
 		my_candidate_file = the_cand_file;
 		database = PatternUtil.getDB(the_db_file);
 		my_top_k = the_top_k;
+		support_count = the_support_count * database.size();
 		if (!database.isEmpty()) {
 			if (!prescreen()) {
 				allTheSame();
 			} else {
-//				support_count = the_support_count * database.size();
-//				current_candidates = new HashMap<String, Double>();
-//				all_candidates = new HashMap<String, Set<Integer>>();
-//				my_top_k = the_top_k;
-//				buildInternalModel();
+//				 current_candidates = new HashMap<String, Double>();
+//				 all_candidates = new HashMap<String, Set<Integer>>();
+//				 buildInternalModel();
 				shortcut();
 			}
 		}
@@ -87,6 +86,7 @@ public class SequentialMiner {
 		for (int i = 1; i < database.size(); i++) {
 			if (!database.get(i).equals(s)) {
 				notSame = true;
+				break;
 			}
 		}
 		return notSame;
@@ -116,18 +116,21 @@ public class SequentialMiner {
 	private void shortcut() throws IOException {
 		int k = 1;
 		do {
-			if (!retrieve(k)) {
+			Map<String, Double> map = retrieve(k);
+			count(map);
+			screen(map);
+			if (current_candidates.isEmpty()) {
 				break;
+			} else {
+//				System.out.println(current_candidates);
+				writeCandidates(k - 1);
+				k++;
 			}
-			count();
-//			System.out.println(current_candidates);
-			writeCandidates(k-1);
-			k++;
 		} while (true);
 	}
 
-	private boolean retrieve(final int lengthOfSeg) {
-		current_candidates = new HashMap<String, Double>();
+	private Map<String, Double> retrieve(final int lengthOfSeg) {
+		Map<String, Double> candidates = new HashMap<String, Double>();
 		for (int i = 0; i < database.size(); i++) {
 			String[] split = database.get(i).split(Symbols.DB_SEPARATOR);
 			for (int j = 0; j < split.length - lengthOfSeg; j++) {
@@ -135,25 +138,31 @@ public class SequentialMiner {
 				for (int kj = j; kj < j + lengthOfSeg; kj++) {
 					p += split[kj] + Symbols.DB_SEPARATOR;
 				}
-				if (!current_candidates.containsKey(p)) {
-					current_candidates.put(p, 0.0);
+				if (!candidates.containsKey(p)) {
+					candidates.put(p, 0.0);
 				}
 			}
 		}
-		if (current_candidates.isEmpty()) {
-			return false;
-		} else {
-			return true;
+		return candidates;
+	}
+
+	private void count(Map<String, Double> candidates) {
+		for (int i = 0; i < database.size(); i++) {
+			for (String p : candidates.keySet()) {
+				if (PatternUtil.contains(database.get(i), p)) {
+					double c = candidates.get(p) + 1;
+					candidates.put(p, c);
+				}
+			}
 		}
 	}
 
-	private void count() {
-		for (int i = 0; i < database.size(); i++) {
-			for (String p : current_candidates.keySet()) {
-				if (PatternUtil.contains(database.get(i), p)) {
-					double c = current_candidates.get(p) + 1;
-					current_candidates.put(p, c);
-				}
+	// filter the patterns whose support count is less than the given threshold
+	private void screen(Map<String, Double> candidates) {
+		current_candidates = new HashMap<String, Double>();
+		for (String p : candidates.keySet()) {
+			if (candidates.get(p) >= support_count) {
+				current_candidates.put(p, candidates.get(p));
 			}
 		}
 	}

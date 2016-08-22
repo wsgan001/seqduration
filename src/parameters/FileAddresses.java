@@ -58,5 +58,5 @@ public interface FileAddresses {
 	
 	public static String RAW_TRAIN_PATTERN = "data/raw_train/mipatterns/act_";
 	
-	
+	public static String RAW_TRAIN_PATTERN_SCORE = "data/raw_train/patternscores/act_";
 }

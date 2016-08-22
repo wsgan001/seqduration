@@ -20,6 +20,7 @@ public abstract class PatternEvaluatorAbs {
 
 	public PatternEvaluatorAbs(final String a_db_file, final int the_sizeOfClasses) throws FileNotFoundException {
 		my_db = PatternUtil.getDB(a_db_file, the_sizeOfClasses);
+//		System.out.println("db: "+my_db);
 		my_sizeOfClasses = the_sizeOfClasses;
 		calcClassRatio();
 	}

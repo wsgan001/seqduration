@@ -11,12 +11,11 @@ import patterncreater.SequentialMiner;
 public class TestPatternMiner {
 
 	final private static int ACT_SIZE = 25;
-	final private static double support_ratio = 0.5;
+	final private static double support_ratio = 0.3;
 	final private static int topK = 20;
 
 	public static void mine(final String the_db, final String the_pattern_output) throws IOException {
 		for (int i = 0; i < ACT_SIZE; i++) {
-			if (i == 0) {
 				System.out.println(i);
 				// PatternMiner pm = new PatternMiner(FileAddresses.PATTERN + i,
 				// support_ratio);
@@ -33,7 +32,6 @@ public class TestPatternMiner {
 				// oos.close();
 				// fos.close();
 				// }
-			}
 		}
 	}
 
