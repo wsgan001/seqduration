@@ -32,6 +32,7 @@ public class PatternScorer {
 		my_patterns = new HashMap<String, double[]>();
 		System.out.println("db file: " + a_db_file + "\npattern: " + a_mipattern_addr + "\nfile: " + file_prefix);
 		getPatterns(a_mipattern_addr, file_prefix);
+//		printPatterns();
 	}
 
 	public PatternScorer(final String a_pattern_score_file, final String a_db_file, final int the_sizeOfClasses)
@@ -41,6 +42,12 @@ public class PatternScorer {
 		my_patterns = (Map<String, double[]>) ois.readObject();
 		my_db_file = a_db_file;
 		numOfActs = the_sizeOfClasses;
+	}
+	
+	private void printPatterns() {
+		for(String s: my_patterns.keySet()) {
+			System.out.println(s+": "+my_patterns.get(s)[0]);
+		}
 	}
 
 	public Map<String, double[]> addScore(final Evaluators an_eval) throws IOException {
@@ -72,6 +79,7 @@ public class PatternScorer {
 			if (p != null && !p.isEmpty()) {
 				double score = a_pe.getScore(p);
 				my_patterns.get(p)[a_scoreIndex] = score;
+//				System.out.println(p+": "+score);
 			}
 		}
 		// serialise(my_patterns, the_output_file);

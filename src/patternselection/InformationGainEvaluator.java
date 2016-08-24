@@ -3,6 +3,8 @@ package patternselection;
 import java.io.FileNotFoundException;
 import java.util.List;
 
+import test.Print;
+
 public class InformationGainEvaluator extends PatternEvaluatorAbs implements PatternEvaluator {
 
 	public InformationGainEvaluator(String a_db_file, int the_sizeOfClasses) throws FileNotFoundException {
@@ -14,15 +16,37 @@ public class InformationGainEvaluator extends PatternEvaluatorAbs implements Pat
 		double[] classRatio = getClassRatio();
 		calcPatternRatio(a_pattern);
 		double[][] patternRatio = getConditionalRatioOnPatterns(a_pattern);
-		double first=0, second=0, third=0;
-		for(int i=0; i< my_sizeOfClasses; i++) {
-			first += classRatio[i] * Math.log(classRatio[i]);
-			second +=patternRatio[0][i]*Math.log(patternRatio[0][i]);
-			third +=patternRatio[1][i]*Math.log(patternRatio[1][i]);
+		// print:
+//		System.out.println("for pattern: " + a_pattern);
+//		System.out.println("class ratio: ");
+//		Print.printArray(classRatio);
+//		System.out.println("\nconditional pattern ratio:");
+//		Print.printArray(patternRatio);
+		double first = 0, second = 0, third = 0;
+		for (int i = 0; i < my_sizeOfClasses; i++) {
+			if (classRatio[i] == 0) {
+				first += min();
+			} else {
+				first += classRatio[i] * Math.log(classRatio[i]);
+			}
+			if (patternRatio[0][i] == 0) {
+				second += min();
+			} else {
+				second += patternRatio[0][i] * Math.log(patternRatio[0][i]);
+			}
+			if (patternRatio[1][i] == 0) {
+				third += min();
+			} else {
+				third += patternRatio[1][i] * Math.log(patternRatio[1][i]);
+			}
 		}
 		second *= patternRatio[0][my_sizeOfClasses];
 		third *= patternRatio[1][my_sizeOfClasses];
 		return -1 * first + second + third;
+	}
+
+	private double min() {
+		return PatternEvaluatorAbs.MIN_NUMBER * Math.log(PatternEvaluatorAbs.MIN_NUMBER);
 	}
 
 }

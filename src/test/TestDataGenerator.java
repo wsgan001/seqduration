@@ -29,7 +29,7 @@ public class TestDataGenerator {
 		return result;
 	}
 
-	private static List<ActivitySensorAssociation> getData(final String the_file)
+	public static List<ActivitySensorAssociation> getData(final String the_file)
 			throws IOException, ClassNotFoundException {
 		FileInputStream fis = new FileInputStream(the_file);
 		ObjectInputStream ois = new ObjectInputStream(fis);
@@ -47,7 +47,8 @@ public class TestDataGenerator {
 		dg.separate();
 	}
 
-	public static void generateTrain(final String the_input, final String the_output) throws ClassNotFoundException, IOException {
+	public static void generateTrain(final String the_input, final String the_output)
+			throws ClassNotFoundException, IOException {
 		for (int i = 0; i < 10; i++) {
 			List<ActivitySensorAssociation> trainingData = new ArrayList<ActivitySensorAssociation>();
 			for (int ki = 0; ki < 10; ki++) {
@@ -63,7 +64,7 @@ public class TestDataGenerator {
 				}
 			}
 			{
-				FileOutputStream fos = new FileOutputStream(the_output+i);
+				FileOutputStream fos = new FileOutputStream(the_output + i);
 				ObjectOutputStream oos = new ObjectOutputStream(fos);
 				oos.writeObject(trainingData);
 				oos.close();
@@ -74,7 +75,7 @@ public class TestDataGenerator {
 
 	public static void main(String[] args) throws ClassNotFoundException, IOException {
 		// start(FileAddresses.RAW_FOLD, FileAddresses.RAW_ASSOCIATION);
-//		start(FileAddresses.SPLIT_FOLD, FileAddresses.SPLIT_ASSOCIATION);
+		// start(FileAddresses.SPLIT_FOLD, FileAddresses.SPLIT_ASSOCIATION);
 		generateTrain(FileAddresses.RAW_FOLD, FileAddresses.RAW_TRAIN_ASA);
 	}
 }

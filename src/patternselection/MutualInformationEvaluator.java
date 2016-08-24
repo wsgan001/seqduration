@@ -15,15 +15,19 @@ public class MutualInformationEvaluator extends PatternEvaluatorAbs implements P
 		// double[] mi = new double[my_sizeOfClasses];
 		double mi = 0;
 		for (int i = 0; i < my_sizeOfClasses; i++) {
-			mi += Math.log(condOnClasses[0][i]) - Math.log(condOnClasses[0][my_sizeOfClasses]);
+			if (condOnClasses[0][i] == 0) {
+				mi += Math.log(PatternEvaluatorAbs.MIN_NUMBER);
+			} else {
+				mi += Math.log(condOnClasses[0][i]) - Math.log(condOnClasses[0][my_sizeOfClasses]);
+			}
 		}
 		// getMI(my_ratioOfPatterns);
+//		System.out.println(a_pattern + ": " + mi);
 		return mi;
 	}
 
 	private double[] getMI(double[][] the_patternRatio) {
 		double[] result = new double[my_sizeOfClasses];
-
 		for (int i = 0; i < my_sizeOfClasses; i++) {
 			// both class and pattern occur
 			double A = the_patternRatio[0][i];
@@ -33,7 +37,11 @@ public class MutualInformationEvaluator extends PatternEvaluatorAbs implements P
 			double B = the_patternRatio[0][my_sizeOfClasses] - the_patternRatio[0][i];
 			// the total number of instances
 			double N = my_ratioOfClasses[my_sizeOfClasses];
-			result[i] = Math.log(A * N / ((A + C) * (A + B)));
+			if (A == 0 && B == 0 && C == 0) {
+				result[i] = Math.log(PatternEvaluatorAbs.MIN_NUMBER);
+			} else {
+				result[i] = Math.log(A * N / ((A + C) * (A + B)));
+			}
 		}
 		return result;
 	}
