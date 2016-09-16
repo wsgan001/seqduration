@@ -13,16 +13,17 @@ public class MutualInformationEvaluator extends PatternEvaluatorAbs implements P
 		calcPatternRatio(a_pattern);
 		double[][] condOnClasses = getConditionalRatioOnClasses(a_pattern);
 		// double[] mi = new double[my_sizeOfClasses];
-		double mi = 0;
+		double mi = Double.NEGATIVE_INFINITY;
 		for (int i = 0; i < my_sizeOfClasses; i++) {
-			if (condOnClasses[0][i] == 0) {
-				mi += Math.log(PatternEvaluatorAbs.MIN_NUMBER);
-			} else {
-				mi += Math.log(condOnClasses[0][i]) - Math.log(condOnClasses[0][my_sizeOfClasses]);
+			if (condOnClasses[0][i] > 0) {
+				double m = Math.log(condOnClasses[0][i] / condOnClasses[0][my_sizeOfClasses]);
+				if (m > mi) {
+					mi = m;
+				}
 			}
 		}
 		// getMI(my_ratioOfPatterns);
-//		System.out.println(a_pattern + ": " + mi);
+		// System.out.println(a_pattern + ": " + mi);
 		return mi;
 	}
 

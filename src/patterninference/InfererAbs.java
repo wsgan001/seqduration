@@ -1,6 +1,7 @@
 package patterninference;
 
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.commons.math3.distribution.NormalDistribution;
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
@@ -10,13 +11,17 @@ import parameters.Symbols;
 import patterncreater.PatternUtil;
 import sensor.SensorEvent;
 import sensor.SensorUtil;
+import test.TestInferer;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.ObjectInputStream;
+import java.text.DecimalFormat;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 
 /**
@@ -27,27 +32,22 @@ import java.util.List;
  */
 public class InfererAbs {
 	private static double E = 0.001;
-	/**
-	 * map<act id, map<pattern string, scores>>
-	 */
-	private Map<Integer, Map<String, double[]>> my_act_pattern_score;
-	private List<String> my_2Lpattern_indices;
-	private Map<String, List<DescriptiveStatistics>> my_2Lpattern_clusters;
+	private static DecimalFormat df = new DecimalFormat("#.###");
+	private static double match_weight = 0.8;
+	private Set<Integer> ACTS = new HashSet<Integer>();
 
 	private FileWriter my_fileWriter;
-
-	private static double match_weight = 0.5;
 	private int my_numOfAct;
-	private SensorUtil my_sensors;
+	private Map<Integer, Map<String, double[]>> my_act_pattern_score;
 
-	public InfererAbs(SensorUtil the_sensors, FileWriter a_fw, final String a_pattern_score_file,
-			final int the_numOfClasses, final String a_2LPattern_file, final String a_2LP_index_file)
+	public InfererAbs(FileWriter a_fw, final String a_pattern_score_file, final int the_numOfClasses)
 			throws ClassNotFoundException, IOException {
 		initialisePatternScore(a_pattern_score_file, the_numOfClasses);
-		initialise2LPattern(a_2LPattern_file, a_2LP_index_file);
-		printSetup();
+		// printSetup();
 		my_fileWriter = a_fw;
-		my_sensors = the_sensors;
+		ACTS.add(0);
+		ACTS.add(11);
+		ACTS.add(15);
 	}
 
 	/**
@@ -74,34 +74,6 @@ public class InfererAbs {
 		}
 	}
 
-	private void initialise2LPattern(final String a_2LPattern_file, final String a_2LP_index_file)
-			throws IOException, ClassNotFoundException {
-		{
-			FileInputStream fis = new FileInputStream(a_2LPattern_file);
-			ObjectInputStream ois = new ObjectInputStream(fis);
-			my_2Lpattern_clusters = (Map<String, List<DescriptiveStatistics>>) ois.readObject();
-			fis.close();
-			ois.close();
-		}
-		{
-			FileInputStream fis = new FileInputStream(a_2LP_index_file);
-			ObjectInputStream ois = new ObjectInputStream(fis);
-			my_2Lpattern_indices = (List<String>) ois.readObject();
-			fis.close();
-			ois.close();
-		}
-	}
-
-	private void printSetup() {
-		System.out.println("2L Sequence");
-		for (String k : my_2Lpattern_clusters.keySet()) {
-			System.out.print("\n" + k + ": ");
-			for (DescriptiveStatistics ds : my_2Lpattern_clusters.get(k)) {
-				System.out.print(ds.getMean() + ", ");
-			}
-		}
-	}
-
 	private void writeArray(double[] a, FileWriter a_fw) throws IOException {
 		for (int i = 0; i < a.length; i++) {
 			a_fw.write(a[i] + ",");
@@ -119,14 +91,23 @@ public class InfererAbs {
 	private double computeScore(final double match_score, final double[] pattern_scores) throws IOException {
 		// my_fileWriter.write("match: " + match_score + "\t pattern score: ");
 		// writeArray(pattern_scores, my_fileWriter);
-		double result = 0;
-		for (int i = 0; i < pattern_scores.length; i++) {
-			if (pattern_scores[i] != 0.0) {
-				result += pattern_scores[i];
-			}
-		}
-		result = result * (1 - match_weight) + Math.log(match_score) * match_weight;
-		return result;
+		// double result = 0;
+		// for (int i = 0; i < pattern_scores.length; i++) {
+		// if (pattern_scores[i] != 0.0) {
+		// result += pattern_scores[i];
+		// }
+		// }
+		// result = result * (1 - match_weight) + Math.log(match_score) *
+		// match_weight;
+		// return result;
+		// System.out.println("MD = " + df.format(match_score) + ", " +
+		// df.format(pattern_scores[0]) + ", "
+		// + df.format(pattern_scores[1]) + ", " +
+		// df.format(pattern_scores[2]));
+		// return match_weight * match_score
+		// + (1 - match_weight) * (pattern_scores[0] / Math.pow(Math.E,
+		// pattern_scores[1]));
+		return match_score	+ 0.02 * (pattern_scores[0] / Math.pow(Math.E, pattern_scores[1]));
 	}
 
 	private double[] initialiseDoubleArray(int the_length) {
@@ -137,153 +118,67 @@ public class InfererAbs {
 		return result;
 	}
 
-	public double[] infer(final List<SensorEvent> a_listOfEvents) throws IOException {
-		String seq = map22LPattern(a_listOfEvents);
-		// my_fileWriter.write("pattern: "+seq+"\n start searching:");
+	public void startInferring(final String seq_file) throws ClassNotFoundException, IOException {
+		FileInputStream fis = new FileInputStream(seq_file);
+		ObjectInputStream ois = new ObjectInputStream(fis);
+		List<Integer> acts = (List<Integer>) ois.readObject();
+		List<String> patterns = (List<String>) ois.readObject();
+		fis.close();
+		ois.close();
+		List<Integer> result = new ArrayList<Integer>();
+		for (int pi = 0; pi < patterns.size(); pi++) {
+			double[] in = infer(patterns.get(pi));
+			int i = TestInferer.getMax(in);
+			result.add(i);
+			my_fileWriter.write("==>" + i + ", (" + acts.get(pi) + ")\n\n");
+		}
+		Evaluator eval = new Evaluator(acts, result, my_numOfAct);
+		my_fileWriter.write("accuracies: " + df.format(eval.getAccuracy()) + "\n");
+//		my_fileWriter.write("cm: \n" + eval.printCM() + "\n");
+		double[] cl = eval.getClassAccuracy();
+		for(int i=0; i< cl.length; i++) {
+			my_fileWriter.write(df.format(cl[i])+"\t");
+		}
+	}
+
+	public double[] infer(final String seq) throws IOException {
+		// System.out.println("start from: " +
+		// a_listOfEvents.get(0).getSensorId());
+		my_fileWriter.write("input: " + seq + "\n ");
 		double[] max = initialiseDoubleArray(my_numOfAct);
 		for (int act : my_act_pattern_score.keySet()) {
 			// my_fileWriter.write("\nA" + act + " ");
+			// System.out.println("A" + act);
+			String bestP = "";
 			for (String p : my_act_pattern_score.get(act).keySet()) {
 				// my_fileWriter.write("P " + p + ": ");
-				final double match_degree = computeScore(EditDistanceCalc.compute(seq, p),
-						my_act_pattern_score.get(act).get(p));
-				if (match_degree > max[act]) {
-					max[act] = match_degree;
+				final double m = EditDistanceCalc.compute(seq, p);
+				if (m > 0) {
+					final double match_degree =
+							// EditDistanceCalc.compute(seq, p);
+							computeScore(m, my_act_pattern_score.get(act).get(p));
+					my_fileWriter.write("A" + act + "\tP " + p + "\n");
+					my_fileWriter
+							.write("m=" + df.format(m) + ", p=" + df.format(my_act_pattern_score.get(act).get(p)[0])
+									+ ", " + df.format(my_act_pattern_score.get(act).get(p)[1]) + ", F="
+									+ df.format(match_degree) + "\n");
+					if (match_degree > max[act]) {
+						max[act] = match_degree;
+						bestP = p;
+					}
 				}
 			}
-		}
-		return max;
-	}
-
-	private String getMatchedPattern(final int from, final int to, final long duration) {
-		String result = "";
-		double max = 0;
-		for (String p : my_2Lpattern_clusters.keySet()) {
-			double s = get2LSeqMatchScore(p, from + Symbols.SEQ_SEPARATOR + to);
-			double[] d = getDurationScore(duration, my_2Lpattern_clusters.get(p));
-			if (d[0] + s > max) {
-				max = d[0] + s;
-				result = p + Symbols.DURATION_SEPARATOR + new Double(d[1]).intValue();
-			}
-		}
-		// System.out.println("given " + from + "-" + to + " end: " + result + "
-		// : " + max);
-		return result;
-	}
-
-	private double[] getDurationScore(final long duration, final List<DescriptiveStatistics> ds) {
-		double[] max = new double[2];
-		for (int i = 0; i < ds.size(); i++) {
-			double density = new NormalDistribution(ds.get(i).getMean(), ds.get(i).getStandardDeviation())
-					.density(duration);
-			if (density > max[0]) {
-				max[0] = density;
-				max[1] = i;
-			}
-		}
-		return max;
-	}
-
-	private String map22LPattern(final List<SensorEvent> a_listOfEvents) {
-		String result = "";
-		for (int i = 0; i < a_listOfEvents.size() - 1; i++) {
-			// final String the_2lPattern = a_listOfEvents.get(i).getSensorId()
-			// + Symbols.SEQ_SEPARATOR
-			// + a_listOfEvents.get(i + 1).getSensorId();
-			long duration = a_listOfEvents.get(i + 1).getStartTime() - a_listOfEvents.get(i).getStartTime();
-			result += get2LPatternIndex(getMatchedPattern(a_listOfEvents.get(i).getSensorId(),
-					a_listOfEvents.get(i + 1).getSensorId(), duration)) + Symbols.PATTERN_SEPARATOR;
-			// result += get2LPatternIndex(getClusterIndex(the_2lPattern,
-			// duration)) + Symbols.PATTERN_SEPARATOR;
-		}
-		return result;
-	}
-
-	private String getClusterIndex(final String a_2Lpattern, final long duration) {
-		int id = -1;
-		for (String p : my_2Lpattern_clusters.keySet()) {
-			if (p.equals(a_2Lpattern)) {
-				int i = PatternUtil.map2cluster(my_2Lpattern_clusters.get(p), duration);
-				id = i;
-				break;
-			}
-		}
-		if (id >= 0) {
-			return a_2Lpattern + Symbols.DURATION_SEPARATOR + id;
-		} else {
-			String p = findBestMatched2LSeqP(a_2Lpattern);
-			int i = PatternUtil.map2cluster(my_2Lpattern_clusters.get(p), duration);
-			return p + Symbols.DURATION_SEPARATOR + i;
-		}
-
-	}
-
-	private String findBestMatched2LSeqP(final String a_2Lpattern) {
-		double score = 0;
-		String result = "";
-		for (String p : my_2Lpattern_clusters.keySet()) {
-			double s = get2LSeqMatchScore(p, a_2Lpattern);
-			if (s > score) {
-				score = s;
-				result = p;
-			}
-		}
-		// System.out.println(
-		// " no pattern found for: " + a_2Lpattern + ", but closed one is: " +
-		// result + " with score: " + score);
-		return result;
-	}
-
-	private int get2LPatternIndex(final String a_2LPattern) {
-		for (int i = 0; i < my_2Lpattern_indices.size(); i++) {
-			if (my_2Lpattern_indices.get(i).equals(a_2LPattern)) {
-				// System.out.println(a_2LPattern + " map to " + i);
-				return i;
-				// } else {
-				// double s = get2LSeqMatchScore(my_2Lpattern_indices.get(i),
-				// a_2LPattern);
-				// if (s > score) {
-				// score = s;
-				// id = i;
-				// }
-			}
-		}
-		// System.out.println("no match for: " + a_2LPattern);
-
-		return -1;
-	}
-
-	private double get2LSeqMatchScore(final String a_2LSeq, final String input) {
-		// System.out.println("pattern: "+a_2LSeq+", input: "+input);
-		String[] seq = a_2LSeq.trim().split(Symbols.SEQ_SEPARATOR);
-		String[] in = input.trim().split(Symbols.SEQ_SEPARATOR);
-		if (seq[0].equals(in[1]) && seq[1].equals(in[0])) {
-			return 1;
-		} else {
-			if (seq[0].equals(in[0])) {
-				return 0.6 + (my_sensors.similarity(my_sensors.findSensor(Integer.parseInt(seq[1])),
-						my_sensors.findSensor(Integer.parseInt(in[1]))) - E) * 0.4;
-			} else if (seq[1].equals(in[1])) {
-				return 0.4 + (my_sensors.similarity(my_sensors.findSensor(Integer.parseInt(seq[0])),
-						my_sensors.findSensor(Integer.parseInt(in[0]))) - E) * 0.6;
+			if (my_act_pattern_score.containsKey(act) && my_act_pattern_score.get(act).containsKey(bestP)) {
+				my_fileWriter.write("best matched p: " + bestP + ": " + df.format(max[act]) + ", "
+						+ df.format(my_act_pattern_score.get(act).get(bestP)[0]) + ", "
+						+ df.format(my_act_pattern_score.get(act).get(bestP)[1]) + ", "
+						+ df.format(my_act_pattern_score.get(act).get(bestP)[2]) + "\n");
 			} else {
-				return (my_sensors.similarity(my_sensors.findSensor(Integer.parseInt(seq[0])),
-						my_sensors.findSensor(Integer.parseInt(in[0]))) - E) * 0.6
-						+ (my_sensors.similarity(my_sensors.findSensor(Integer.parseInt(seq[1])),
-								my_sensors.findSensor(Integer.parseInt(in[1]))) - E) * 0.4;
+				my_fileWriter.write(act + " - " + bestP + " not in " + (my_act_pattern_score.containsKey(act)) + " "
+						+ (my_act_pattern_score.get(act).containsKey(bestP)) + "\n");
 			}
 		}
-		// result += 1;
-
-		// for (int i = 0; i < seq.length; i++) {
-		// if (seq[i].equals(in[i])) {
-		// result += 1;
-		// } else {
-		// result +=
-		// my_sensors.similarity(my_sensors.findSensor(Integer.parseInt(seq[i])),
-		// my_sensors.findSensor(Integer.parseInt(in[i]))) - E;
-		// }
-		// }
+		return max;
 	}
 
 }

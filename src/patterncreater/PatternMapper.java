@@ -47,22 +47,6 @@ public class PatternMapper {
 		return fw;
 	}
 
-	/**
-	 * 
-	 * @return
-	 */
-	private int map2cluster(final List<DescriptiveStatistics> clusters,
-			final double duration) {
-		double min_dist = 0;
-		int clusterID = -1;
-		for (int i = 0; i < clusters.size(); i++) {
-			if (clusterID < 0
-					|| Math.abs(clusters.get(i).getMean() - duration) < min_dist) {
-				clusterID = i;
-			}
-		}
-		return clusterID;
-	}
 
 	private String getList(final List<SensorEvent> list) {
 		String result = "";
@@ -71,7 +55,7 @@ public class PatternMapper {
 					+ list.get(i).getSensorId();
 			final double duration = (list.get(i).getStartTime() - list.get(
 					i - 1).getStartTime()) / 1000;
-			final int cID = map2cluster(my_seq2Clusters.get(pair), duration);
+			final int cID = PatternUtil.map2cluster(my_seq2Clusters.get(pair), duration);
 			result += findIndex(pair + Symbols.DURATION_SEPARATOR + cID)
 					+ Symbols.PATTERN_SEPARATOR;
 		}

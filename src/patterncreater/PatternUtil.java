@@ -10,6 +10,8 @@ import java.util.Map;
 import java.util.Scanner;
 import java.util.Set;
 
+import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
+
 import parameters.FileAddresses;
 import parameters.Symbols;
 
@@ -25,6 +27,23 @@ public class PatternUtil {
 			}
 		}
 		return reuslt;
+	}
+	
+	/**
+	 * 
+	 * @return
+	 */
+	public static int map2cluster(final List<DescriptiveStatistics> clusters,
+			final double duration) {
+		double min_dist = 0;
+		int clusterID = -1;
+		for (int i = 0; i < clusters.size(); i++) {
+			if (clusterID < 0
+					|| Math.abs(clusters.get(i).getMean() - duration) < min_dist) {
+				clusterID = i;
+			}
+		}
+		return clusterID;
 	}
 
 	public static List<String> getDB(final String the_db_file) {

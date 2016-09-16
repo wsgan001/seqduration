@@ -3,6 +3,16 @@ package patterninference;
 import parameters.Symbols;
 
 public class EditDistanceCalc {
+	
+	private static int intersect(String s, String[] p) {
+		int count = 0;
+		for(String sp: p) {
+			if (s.contains(sp+" ")) {
+				count++;
+			}
+		}
+		return count;
+	}
 
 	public static double compute(final String a, final String b) {
 		String[] sa = a.trim().split(Symbols.PATTERN_SEPARATOR);
@@ -20,10 +30,10 @@ public class EditDistanceCalc {
 						distance[i - 1][j - 1] + ((sa[i - 1].equals(sb[j - 1])) ? 0 : 1));
 			}
 		}
-		// System.out.println("final seq match:
-		// "+distance[a_sequence.size()][b_sequence.size()]);
+//		 System.out.println(a+", "+b+" : "+(1 - distance[sa.length][sb.length] / Math.max(sa.length, sb.length)));
 		// Print.printDoubleArray(distance);
-		return 1 - distance[sa.length][sb.length] / Math.max(sa.length, sb.length);
+		return (1 - distance[sa.length][sb.length] / sa.length);
+//				* intersect(a, sb);
 	}
 
 	private static double minimum(double a, double b, double c) {
@@ -31,9 +41,12 @@ public class EditDistanceCalc {
 	}
 
 	public static void main(String[] args) {
-		String a = "234 345 123 678 674";
-		String b = "234 345 123 678 674";
-		System.out.println(compute(a, b));
+		String p = "221 278 278 278 284 268 264 247 225 221 237 260 247 225 221 221 221 221 237 260 ";
+		String a = "221 221 221 221 221 221 ";
+		String b = "247 260 247 264 260 247 264 260 247 260 ";
+		String[] s = {"221", "278"};
+		System.out.println(intersect(b, s));
+		System.out.println(compute(p, a)+", "+compute(p,b));
 	}
 
 }

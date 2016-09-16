@@ -24,6 +24,8 @@ public interface FileAddresses {
 	public static String PATTERN_TOPK = ".topk";
 
 	public static String RAW_FOLD = "data/fold_raw/f_";
+	//convert each fold into patterns
+	public static String RAW_FOLD_MAPPED = "data/fold_raw/p_";
 
 	public static String SPLIT_FOLD = "data/fold_split/f_";
 
@@ -59,4 +61,6 @@ public interface FileAddresses {
 	public static String RAW_TRAIN_PATTERN = "data/raw_train/mipatterns/act_";
 	
 	public static String RAW_TRAIN_PATTERN_SCORE = "data/raw_train/patternscores/act_";
+	
+	public static String RAW_TRAIN_PATTERN_SCORE_AFFIX = ".score";
 }
