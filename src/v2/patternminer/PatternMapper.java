@@ -1,10 +1,12 @@
 package v2.patternminer;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.ObjectInputStream;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -12,8 +14,11 @@ import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 
 import parameters.FileAddresses;
 import parameters.Symbols;
+import patterncreater.PatternUtil;
 import segmentation.ActivitySensorAssociation;
 import sensor.SensorEvent;
+import v2.data.DataUtil;
+import v2.data.Parameters;
 
 /**
  * map sensor events to indices of <s1, s2, duration cluster id>
@@ -23,13 +28,14 @@ import sensor.SensorEvent;
  */
 public class PatternMapper {
 	private int[] my_acts;
-	
+
 	private List<String> my_seq2index;
 
 	private Map<String, List<DescriptiveStatistics>> my_seq2Clusters;
 
-	public PatternMapper(final String mapper_file, final String map2Indices, final int[] acts)
-			throws IOException, ClassNotFoundException {
+	private Map<Integer, Integer> my_actID_index;
+
+	public PatternMapper(final String mapper_file, final int[] acts) throws IOException, ClassNotFoundException {
 		FileInputStream fis = new FileInputStream(mapper_file);
 		ObjectInputStream ois = new ObjectInputStream(fis);
 		my_seq2Clusters = (Map<String, List<DescriptiveStatistics>>) ois.readObject();
@@ -37,12 +43,49 @@ public class PatternMapper {
 		ois.close();
 		fis.close();
 		my_acts = acts;
+		initialiseIndex();
 	}
 
-	private FileWriter[] initialiseFileWriter(final String addr) throws IOException {
+	private void initialiseIndex() {
+		my_actID_index = new HashMap<Integer, Integer>();
+		int index = 0;
+		for (int i : my_acts) {
+			my_actID_index.put(i, index);
+			index++;
+		}
+	}
+
+	private FileWriter[] initialiseFileWriter(final int train_index, final String appendix) throws IOException {
+		// initialise pattern dir
+		final String group_dir = DataUtil.generateGroupFileName(Parameters.GROUPS_DIR, my_acts);
+		{
+			File f = new File(group_dir + Parameters.PATTERNS_SQUENTIAL_DIR);
+			if (!f.exists()) {
+				f.mkdir();
+			}
+		}
+		{
+			File f = new File(group_dir + Parameters.PATTERNS_SQUENTIAL_PATTERNS_DIR);
+			if (!f.exists()) {
+				f.mkdir();
+			}
+		}
+		{
+			File f = new File(group_dir + Parameters.PATTERNS_SCORE_DIR);
+			if (!f.exists()) {
+				f.mkdir();
+			}
+		}
+		{
+			File f = new File(group_dir + Parameters.PATTERNS_SQUENTIAL_CONVERTED_FILES_DIR);
+			if (!f.exists()) {
+				f.mkdir();
+			}
+		}
 		FileWriter[] fw = new FileWriter[my_acts.length];
-		for (int i = 0; i < NUM_OF_ACT; i++) {
-			fw[i] = new FileWriter(addr + "_" + i);
+		for (int i = 0; i < my_acts.length; i++) {
+			fw[i] = new FileWriter(group_dir + Parameters.PATTERNS_SQUENTIAL_CONVERTED_FILES_DIR + appendix
+					+ train_index + "_" + my_acts[i]);
 		}
 		return fw;
 	}
@@ -72,10 +115,11 @@ public class PatternMapper {
 		return id;
 	}
 
-	public void write(List<ActivitySensorAssociation> input, final String addr) throws IOException {
-		FileWriter[] fw = initialiseFileWriter(addr);
+	public void write(List<ActivitySensorAssociation> input, final int train_index, final String appendix)
+			throws IOException {
+		FileWriter[] fw = initialiseFileWriter(train_index, appendix);
 		for (ActivitySensorAssociation asa : input) {
-			fw[asa.getActEvent().getSensorId()].write(getList(asa.getSensorEvents()));
+			fw[my_actID_index.get(asa.getActEvent().getSensorId())].write(getList(asa.getSensorEvents()));
 		}
 		close(fw);
 	}
@@ -84,5 +128,23 @@ public class PatternMapper {
 		for (int i = 0; i < fw.length; i++) {
 			fw[i].close();
 		}
+	}
+
+	public static void run(final int[] acts, final String appendix) throws IOException, ClassNotFoundException {
+		final String group_dir = DataUtil.generateGroupFileName(Parameters.GROUPS_DIR, acts);
+		FileInputStream fis = new FileInputStream(group_dir + "/" + appendix);
+		ObjectInputStream ois = new ObjectInputStream(fis);
+		List<List<ActivitySensorAssociation>> train = (List<List<ActivitySensorAssociation>>) ois.readObject();
+		ois.close();
+		fis.close();
+		for (int i = 0; i < Parameters.NUM_OF_FOLDERS; i++) {
+			// retrieve 2-length pattern data
+			PatternMapper pm = new PatternMapper(group_dir + Parameters.PATTERNS_MAPPER_DIR + appendix + i, acts);
+			pm.write(train.get(i), i, appendix);
+		}
+	}
+
+	public static void main(String[] args) throws ClassNotFoundException, IOException {
+		run(Parameters.R1_ROOM, Parameters.SOURCE);
 	}
 }

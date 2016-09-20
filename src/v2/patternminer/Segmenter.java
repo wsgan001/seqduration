@@ -1,5 +1,6 @@
 package v2.patternminer;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -94,7 +95,13 @@ public class Segmenter {
 			ois.close();
 			fis.close();
 			// collect train data
-			new Segmenter(train.get(i), dir_name+Parameters.PATTERNS_MAPPER_DIR+i);
+			{
+				File f = new File(dir_name+Parameters.PATTERNS_MAPPER_DIR);
+				if (!f.exists()) {
+					f.mkdir();
+				}
+			}
+			new Segmenter(train.get(i), dir_name+Parameters.PATTERNS_MAPPER_DIR+appendix+i);
 		}
 	}
 	
@@ -107,7 +114,7 @@ public class Segmenter {
 	}
 
 	public static void main(String[] args) throws ClassNotFoundException, IOException {
-//		run(Parameters.R1_ROOM, Parameters.SOURCE);
-//		test("data.v2/groups/g_0_11_15/p/m0");
+		run(Parameters.R1_ROOM, Parameters.SOURCE);
+//		test("data.v2/groups/g_0_11_15/p/m/split5");
 	}
 }
