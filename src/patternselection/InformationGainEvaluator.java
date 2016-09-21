@@ -23,7 +23,7 @@ public class InformationGainEvaluator extends PatternEvaluatorAbs implements Pat
 //		System.out.println("\nconditional pattern ratio:");
 //		Print.printArray(patternRatio);
 		double first = 0, second = 0, third = 0;
-		for (int i = 0; i < my_sizeOfClasses; i++) {
+		for (int i = 0; i < acts; i++) {
 			// if (classRatio[i] == 0) {
 			// first += min();
 			// } else {

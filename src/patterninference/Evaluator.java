@@ -7,7 +7,7 @@ public class Evaluator {
 	private int[][] confusionMatrix;
 	private int total;
 
-	public Evaluator(List<Integer> ground_truth, List<Integer> inferred, int numOfClasses) {
+	public Evaluator(List<Integer> ground_truth, List<Integer> inferred, int[] acts) {
 		initialise(ground_truth, inferred, numOfClasses);
 	}
 

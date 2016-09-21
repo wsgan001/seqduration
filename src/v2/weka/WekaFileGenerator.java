@@ -1,5 +1,6 @@
 package v2.weka;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -32,17 +33,30 @@ public class WekaFileGenerator {
 		List<List<ActivitySensorAssociation>> test = (List<List<ActivitySensorAssociation>>) ois.readObject();
 		ois.close();
 		fis.close();
+		// prepare weka dir
+		{
+			File weka = new File(group_dir + Parameters.WEKA_DIR);
+			if (!weka.exists()) {
+				weka.mkdir();
+			}
+		}
+		{
+			File weka = new File(group_dir + Parameters.WEKA_DIR + appendix);
+			if (!weka.exists()) {
+				weka.mkdir();
+			}
+		}
 		// fore each pair of train and test, generate arff files
 		for (int i = 0; i < Parameters.NUM_OF_FOLDERS; i++) {
 			{
 				Collections.shuffle(train.get(i));
 				ARFFGenerator ag = new ARFFGenerator(my_numOfSensors, my_acts, train.get(i));
-				ag.generate(group_dir + "/" + appendix + "_weka_tr" + i );
+				ag.generate(group_dir + Parameters.WEKA_DIR + appendix + "/tr" + i);
 			}
 			{
 				Collections.shuffle(train.get(i));
 				ARFFGenerator ag = new ARFFGenerator(my_numOfSensors, my_acts, test.get(i));
-				ag.generate(group_dir + "/" + appendix + "_weka_te" + i);
+				ag.generate(group_dir + Parameters.WEKA_DIR + appendix + "/te" + i);
 			}
 		}
 	}

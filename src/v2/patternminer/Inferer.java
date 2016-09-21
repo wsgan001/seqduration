@@ -9,10 +9,15 @@ import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 import parameters.FileAddresses;
 import parameters.Symbols;
 import patterncreater.PatternUtil;
+import patterninference.EditDistanceCalc;
 import sensor.SensorEvent;
 import sensor.SensorUtil;
+import test.Print;
 import test.TestInferer;
+import v2.data.DataUtil;
+import v2.data.Parameters;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
@@ -34,20 +39,17 @@ public class Inferer {
 	private static double E = 0.001;
 	private static DecimalFormat df = new DecimalFormat("#.###");
 	private static double match_weight = 0.8;
-	private Set<Integer> ACTS = new HashSet<Integer>();
 
 	private FileWriter my_fileWriter;
-	private int my_numOfAct;
+	private int[] my_acts;
 	private Map<Integer, Map<String, double[]>> my_act_pattern_score;
 
-	public Inferer(FileWriter a_fw, final String a_pattern_score_file, final int the_numOfClasses)
+	public Inferer(FileWriter a_fw, final String a_pattern_score_file, final int[] acts)
 			throws ClassNotFoundException, IOException {
-		initialisePatternScore(a_pattern_score_file, the_numOfClasses);
+		initialisePatternScore(a_pattern_score_file, acts);
+		my_acts = acts;
 		// printSetup();
 		my_fileWriter = a_fw;
-		ACTS.add(0);
-		ACTS.add(11);
-		ACTS.add(15);
 	}
 
 	/**
@@ -60,13 +62,13 @@ public class Inferer {
 	 * @throws IOException
 	 * @throws ClassNotFoundException
 	 */
-	private void initialisePatternScore(final String a_pattern_score_file, final int the_numOfClasses)
+	private void initialisePatternScore(final String appendix_trainIndex, final int[] the_acts)
 			throws IOException, ClassNotFoundException {
-		my_numOfAct = the_numOfClasses;
+		final String group_dir = DataUtil.generateGroupFileName(Parameters.GROUPS_DIR, the_acts);
 		my_act_pattern_score = new HashMap<Integer, Map<String, double[]>>();
-		for (int i = 0; i < the_numOfClasses; i++) {
+		for (int i = 0; i < the_acts.length; i++) {
 			FileInputStream fis = new FileInputStream(
-					a_pattern_score_file + i + FileAddresses.RAW_TRAIN_PATTERN_SCORE_AFFIX);
+					group_dir + Parameters.PATTERNS_SCORE_DIR + appendix_trainIndex + the_acts[i]);
 			ObjectInputStream ois = new ObjectInputStream(fis);
 			my_act_pattern_score.put(i, (Map<String, double[]>) ois.readObject());
 			fis.close();
@@ -88,7 +90,7 @@ public class Inferer {
 	 * @return
 	 * @throws IOException
 	 */
-	private double computeScore(final double match_score, final double[] pattern_scores) throws IOException {
+	private double computeScore(final double match_score, final int pattern_length, final double[] pattern_scores) throws IOException {
 		// my_fileWriter.write("match: " + match_score + "\t pattern score: ");
 		// writeArray(pattern_scores, my_fileWriter);
 		// double result = 0;
@@ -107,7 +109,7 @@ public class Inferer {
 		// return match_weight * match_score
 		// + (1 - match_weight) * (pattern_scores[0] / Math.pow(Math.E,
 		// pattern_scores[1]));
-		return match_score	+ 0.02 * (pattern_scores[0] / Math.pow(Math.E, pattern_scores[1]));
+		return (1 - match_score/pattern_length) + 0.1 * (pattern_scores[0] / Math.pow(Math.E, pattern_scores[1]));
 	}
 
 	private double[] initialiseDoubleArray(int the_length) {
@@ -126,42 +128,52 @@ public class Inferer {
 		fis.close();
 		ois.close();
 		List<Integer> result = new ArrayList<Integer>();
+		List<Integer> gt = new ArrayList<Integer>();
 		for (int pi = 0; pi < patterns.size(); pi++) {
+			my_fileWriter.write("GT:"+acts.get(pi) + "\t");
 			double[] in = infer(patterns.get(pi));
 			int i = TestInferer.getMax(in);
-			result.add(i);
-			my_fileWriter.write("==>" + i + ", (" + acts.get(pi) + ")\n\n");
+			if (i >= 0) {
+				result.add(my_acts[i]);
+				gt.add(acts.get(pi));
+				my_fileWriter.write("==>" + i + ", (" + acts.get(pi) + ")\n\n");
+			} else {
+				System.out.println("NO MATHCED SEQ: "+patterns.get(pi));
+			}
 		}
-		Evaluator eval = new Evaluator(acts, result, my_numOfAct);
+		Evaluator eval = new Evaluator(gt, result, my_acts);
 		my_fileWriter.write("accuracies: " + df.format(eval.getAccuracy()) + "\n");
-//		my_fileWriter.write("cm: \n" + eval.printCM() + "\n");
+		// my_fileWriter.write("cm: \n" + eval.printCM() + "\n");
 		double[] cl = eval.getClassAccuracy();
-		for(int i=0; i< cl.length; i++) {
-			my_fileWriter.write(df.format(cl[i])+"\t");
+		for (int i = 0; i < cl.length; i++) {
+			my_fileWriter.write(df.format(cl[i]) + "\t");
 		}
 	}
 
 	public double[] infer(final String seq) throws IOException {
-		// System.out.println("start from: " +
-		// a_listOfEvents.get(0).getSensorId());
 		my_fileWriter.write("input: " + seq + "\n ");
-		double[] max = initialiseDoubleArray(my_numOfAct);
+		final int seq_length  = seq.split(" ").length;
+		double[] max = initialiseDoubleArray(my_acts.length);
 		for (int act : my_act_pattern_score.keySet()) {
 			// my_fileWriter.write("\nA" + act + " ");
-			// System.out.println("A" + act);
+//			System.out.println("A"+act+" ");
 			String bestP = "";
 			for (String p : my_act_pattern_score.get(act).keySet()) {
 				// my_fileWriter.write("P " + p + ": ");
+//				System.out.println(p + ":");
 				final double m = EditDistanceCalc.compute(seq, p);
-				if (m > 0) {
+				if (m < seq_length) {
 					final double match_degree =
 							// EditDistanceCalc.compute(seq, p);
-							computeScore(m, my_act_pattern_score.get(act).get(p));
+							computeScore(m, seq_length, my_act_pattern_score.get(act).get(p));
 					my_fileWriter.write("A" + act + "\tP " + p + "\n");
 					my_fileWriter
-							.write("m=" + df.format(m) + ", p=" + df.format(my_act_pattern_score.get(act).get(p)[0])
+							.write("d=" + df.format(m) + ", |sq|="+seq_length+", m="+df.format(1-m/seq_length)+ ", p=" + df.format(my_act_pattern_score.get(act).get(p)[0])
 									+ ", " + df.format(my_act_pattern_score.get(act).get(p)[1]) + ", F="
 									+ df.format(match_degree) + "\n");
+//					System.out.println("m=" + df.format(m) + ", p="
+//							+ df.format(my_act_pattern_score.get(act).get(p)[0]) + ", "
+//							+ df.format(my_act_pattern_score.get(act).get(p)[1]) + ", F=" + df.format(match_degree));
 					if (match_degree > max[act]) {
 						max[act] = match_degree;
 						bestP = p;
@@ -178,7 +190,28 @@ public class Inferer {
 						+ (my_act_pattern_score.get(act).containsKey(bestP)) + "\n");
 			}
 		}
+//		System.out.println("result for each act: ");
+//		Print.printArray(max);
 		return max;
+	}
+
+	public static void run(final int[] acts, final String appendix) throws ClassNotFoundException, IOException {
+		final String group_dir = DataUtil.generateGroupFileName(Parameters.GROUPS_DIR, acts);
+		{
+			File f = new File(group_dir + Parameters.PATTERNS_RESULT_DIR);
+			if (!f.exists())
+				f.mkdir();
+		}
+		for (int i = 0; i < 10; i++) {
+			FileWriter fw = new FileWriter(group_dir + Parameters.PATTERNS_RESULT_DIR + appendix + i);
+			Inferer inf = new Inferer(fw, appendix + i + "_", acts);
+			inf.startInferring(group_dir + Parameters.PATTERNS_SQUENTIAL_CONVERTED_TEST_DIR + appendix + i);
+			fw.close();
+		}
+	}
+
+	public static void main(String[] args) throws ClassNotFoundException, IOException {
+		run(Parameters.R1_ROOM, Parameters.SOURCE);
 	}
 
 }

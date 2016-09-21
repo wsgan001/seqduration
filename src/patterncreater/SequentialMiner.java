@@ -168,7 +168,7 @@ public class SequentialMiner {
 	}
 
 	private void writeCandidates(int k) throws IOException {
-		FileWriter fw = new FileWriter(my_candidate_file + "." + k + FileAddresses.PATTERN_AFFIX);
+		FileWriter fw = new FileWriter(my_candidate_file + "_" + k + FileAddresses.PATTERN_AFFIX);
 		MapUtil.orderAndWrite(current_candidates, fw, my_top_k, database.size());
 		fw.close();
 		// all_candidates.addAll(current_candidates.keySet());

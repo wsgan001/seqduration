@@ -89,7 +89,7 @@ public class PatternScorer {
 	}
 
 	public static void main(String[] args) throws IOException {
-		run(Parameters.R1_ROOM, Parameters.SOURCE);
+		run(Parameters.R1_ROOM, Parameters.SPLIT);
 	}
 
 }

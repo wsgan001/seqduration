@@ -48,17 +48,20 @@ public class TestActSensorMapper {
 		ois.close();
 		fis.close();
 		
-		List<ActivitySensorAssociation> result = ActivitySensorEventUtil.split(60, segs);
-		FileOutputStream fos = new FileOutputStream(FileAddresses.SPLIT_ASSOCIATION);
-		ObjectOutputStream oos = new ObjectOutputStream(fos);
-		oos.writeObject(result);
-		oos.close();
-		fos.close();
+		List<ActivitySensorAssociation> result = ActivitySensorEventUtil.split(120, segs);
+//		FileOutputStream fos = new FileOutputStream(FileAddresses.SPLIT_ASSOCIATION);
+//		ObjectOutputStream oos = new ObjectOutputStream(fos);
+//		oos.writeObject(result);
+//		oos.close();
+//		fos.close();
 		
 		System.out.println("size: " + result.size());
 		result.get(0).print();
 		result.get(result.size() - 1).print();
 		result.get(result.size() / 2).print();
+		for(ActivitySensorAssociation asa: result) {
+			System.out.println(asa.getActEvent().getSensorId()+": "+asa.getSensorEvents().size());
+		}
 	}
 	public void map() throws IOException, ClassNotFoundException {
 		ActivitySensorMapper asm = new ActivitySensorMapper(

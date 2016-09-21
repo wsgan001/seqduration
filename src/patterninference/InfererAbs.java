@@ -12,6 +12,8 @@ import patterncreater.PatternUtil;
 import sensor.SensorEvent;
 import sensor.SensorUtil;
 import test.TestInferer;
+import v2.data.DataUtil;
+import v2.data.Parameters;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -34,20 +36,17 @@ public class InfererAbs {
 	private static double E = 0.001;
 	private static DecimalFormat df = new DecimalFormat("#.###");
 	private static double match_weight = 0.8;
-	private Set<Integer> ACTS = new HashSet<Integer>();
 
 	private FileWriter my_fileWriter;
-	private int my_numOfAct;
+	private int[] my_acts;
 	private Map<Integer, Map<String, double[]>> my_act_pattern_score;
 
-	public InfererAbs(FileWriter a_fw, final String a_pattern_score_file, final int the_numOfClasses)
+	public Inferer(FileWriter a_fw, final String appendix_trainIndex, final int[] the_acts)
 			throws ClassNotFoundException, IOException {
-		initialisePatternScore(a_pattern_score_file, the_numOfClasses);
+		initialisePatternScore(appendix_trainIndex, the_acts);
 		// printSetup();
 		my_fileWriter = a_fw;
-		ACTS.add(0);
-		ACTS.add(11);
-		ACTS.add(15);
+		my_acts = the_acts;
 	}
 
 	/**
@@ -60,13 +59,13 @@ public class InfererAbs {
 	 * @throws IOException
 	 * @throws ClassNotFoundException
 	 */
-	private void initialisePatternScore(final String a_pattern_score_file, final int the_numOfClasses)
+	private void initialisePatternScore(final String appendix_trainIndex, final int[] the_acts)
 			throws IOException, ClassNotFoundException {
-		my_numOfAct = the_numOfClasses;
+		final String group_dir = DataUtil.generateGroupFileName(Parameters.GROUPS_DIR, the_acts);
 		my_act_pattern_score = new HashMap<Integer, Map<String, double[]>>();
-		for (int i = 0; i < the_numOfClasses; i++) {
+		for (int i = 0; i < the_acts.length; i++) {
 			FileInputStream fis = new FileInputStream(
-					a_pattern_score_file + i + FileAddresses.RAW_TRAIN_PATTERN_SCORE_AFFIX);
+					group_dir + Parameters.PATTERNS_SCORE_DIR + appendix_trainIndex + the_acts[i]);
 			ObjectInputStream ois = new ObjectInputStream(fis);
 			my_act_pattern_score.put(i, (Map<String, double[]>) ois.readObject());
 			fis.close();
@@ -107,7 +106,7 @@ public class InfererAbs {
 		// return match_weight * match_score
 		// + (1 - match_weight) * (pattern_scores[0] / Math.pow(Math.E,
 		// pattern_scores[1]));
-		return match_score	+ 0.02 * (pattern_scores[0] / Math.pow(Math.E, pattern_scores[1]));
+		return match_score + 0.02 * (pattern_scores[0] / Math.pow(Math.E, pattern_scores[1]));
 	}
 
 	private double[] initialiseDoubleArray(int the_length) {
@@ -118,8 +117,8 @@ public class InfererAbs {
 		return result;
 	}
 
-	public void startInferring(final String seq_file) throws ClassNotFoundException, IOException {
-		FileInputStream fis = new FileInputStream(seq_file);
+	public void startInferring(final String test_file) throws ClassNotFoundException, IOException {
+		FileInputStream fis = new FileInputStream(test_file);
 		ObjectInputStream ois = new ObjectInputStream(fis);
 		List<Integer> acts = (List<Integer>) ois.readObject();
 		List<String> patterns = (List<String>) ois.readObject();
@@ -134,10 +133,10 @@ public class InfererAbs {
 		}
 		Evaluator eval = new Evaluator(acts, result, my_numOfAct);
 		my_fileWriter.write("accuracies: " + df.format(eval.getAccuracy()) + "\n");
-//		my_fileWriter.write("cm: \n" + eval.printCM() + "\n");
+		// my_fileWriter.write("cm: \n" + eval.printCM() + "\n");
 		double[] cl = eval.getClassAccuracy();
-		for(int i=0; i< cl.length; i++) {
-			my_fileWriter.write(df.format(cl[i])+"\t");
+		for (int i = 0; i < cl.length; i++) {
+			my_fileWriter.write(df.format(cl[i]) + "\t");
 		}
 	}
 

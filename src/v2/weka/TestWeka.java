@@ -42,6 +42,6 @@ public class TestWeka {
 	}
 
 	public static void main(String[] args) throws Exception {
-		run(DataUtil.generateGroupFileName(Parameters.GROUPS_DIR, Parameters.R1_ROOM)+"/source_weka_");
+		run(DataUtil.generateGroupFileName(Parameters.GROUPS_DIR, Parameters.R1_ROOM)+Parameters.WEKA_DIR+Parameters.SOURCE+"/");
 	}
 }

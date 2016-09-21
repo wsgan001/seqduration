@@ -14,7 +14,7 @@ public class MutualInformationEvaluator extends PatternEvaluatorAbs implements P
 		double[][] condOnClasses = getConditionalRatioOnClasses(a_pattern);
 		// double[] mi = new double[my_sizeOfClasses];
 		double mi = Double.NEGATIVE_INFINITY;
-		for (int i = 0; i < my_sizeOfClasses; i++) {
+		for (int i = 0; i < my_acts.length; i++) {
 			if (condOnClasses[0][i] > 0) {
 				double m = Math.log(condOnClasses[0][i] / condOnClasses[0][my_sizeOfClasses]);
 				if (m > mi) {
