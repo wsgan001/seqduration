@@ -40,4 +40,6 @@ public interface Parameters {
 	final public String PATTERNS_SCORE_DIR = PATTERNS_DIR + "sq/sr/";
 	// inference result /sq/re/source0: 0- training data id
 	final public String PATTERNS_RESULT_DIR = PATTERNS_DIR + "sq/re/";
+	// recover patttersn to sensor sequence result /sq/rec/source0: 0- training data id
+	final public String PATTERNS_RECOVER_DIR = PATTERNS_DIR + "sq/rec/";
 }

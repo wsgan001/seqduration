@@ -120,7 +120,7 @@ public class Inferer {
 		return result;
 	}
 
-	public void startInferring(final String seq_file) throws ClassNotFoundException, IOException {
+	public double[] startInferring(final String seq_file) throws ClassNotFoundException, IOException {
 		FileInputStream fis = new FileInputStream(seq_file);
 		ObjectInputStream ois = new ObjectInputStream(fis);
 		List<Integer> acts = (List<Integer>) ois.readObject();
@@ -148,6 +148,7 @@ public class Inferer {
 		for (int i = 0; i < cl.length; i++) {
 			my_fileWriter.write(df.format(cl[i]) + "\t");
 		}
+		return cl;
 	}
 
 	public double[] infer(final String seq) throws IOException {
@@ -202,16 +203,24 @@ public class Inferer {
 			if (!f.exists())
 				f.mkdir();
 		}
-		for (int i = 0; i < 10; i++) {
+		double[] result = new double[acts.length];
+		for (int i = 0; i < Parameters.NUM_OF_FOLDERS; i++) {
 			FileWriter fw = new FileWriter(group_dir + Parameters.PATTERNS_RESULT_DIR + appendix + i);
 			Inferer inf = new Inferer(fw, appendix + i + "_", acts);
-			inf.startInferring(group_dir + Parameters.PATTERNS_SQUENTIAL_CONVERTED_TEST_DIR + appendix + i);
+			double[] c = inf.startInferring(group_dir + Parameters.PATTERNS_SQUENTIAL_CONVERTED_TEST_DIR + appendix + i);
 			fw.close();
+			for(int j=0; j< acts.length; j++) {
+				result[j] += c[j];
+			}
 		}
+		for(int j=0; j< acts.length; j++) {
+			result[j] /= Parameters.NUM_OF_FOLDERS;
+		}
+		Print.printArray(result);
 	}
 
 	public static void main(String[] args) throws ClassNotFoundException, IOException {
-		run(Parameters.R1_ROOM, Parameters.SOURCE);
+		run(Parameters.R1_ROOM, Parameters.SPLIT);
 	}
 
 }
